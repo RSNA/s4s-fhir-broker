@@ -69,23 +69,26 @@ User: admin, pw: admin
 
 ### Load test images into dcm4chee server
 
-I loaded some anonymized test images in the dcm4chee server.
-I copied them into the directory 'testImages' in this project
-if you would like to use them. I used the CTN utility send_image
-from the directory the images were in:
+I loaded one test image in the dcm4chee server.
+It is in the 'testImages' directory in this project
+if you would like to use it. I used the CTN utility send_image
+from the directory the image was in:
 ```
 send_image -c DCM4CHEE -Z localhost 11112 *
 ```
-This loaded a study with 1 series and six images:
+This loaded an anonymized Chest CR
 
-- (0x0008,0x0050) AccessionNumber = CASCB1021
-- (0x0008,0x0020) StudyDate = 20150202
-- (0x0008,0x0030) StudyTime = 154122.413000
-- (0x0010,0x0030) PatientBirthDate = 19780202
-- (0x0010,0x0020) PatientID = IIG-DEPT1021
+- (0x0008,0x0016) SOP Class UID = 1.2.840.10008.5.1.4.1.1.1
+- (0x0008,0x0018) SOPInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.144065313879447963369902174642
+- (0x0008,0x0020) StudyDate = 20000101
+- (0x0008,0x0030) StudyTime = empty
+- (0x0008,0x0050) AccessionNumber = 2819497684894126
+- (0x0010,0x0030) PatientBirthDate = 19251223
+- (0x0010,0x0020) PatientID = 1288992
 - (0x0012,0x0062) PatientIdentityRemoved = YES
-- (0x0010,0x0010) PatientName = Beta^B
-- (0x0020,0x000d) StudyInstanceUID = 1.3.6.1.4.1.21367.201599.1.201606010958044
+- (0x0010,0x0010) PatientName = Adams^Daniel
+- (0x0020,0x000d) StudyInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793094907821983261388534
+- (0x0020,0x000e) SeriesInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.210102868760281756294235082201
 
 ### run the instrospection service
 
@@ -126,8 +129,8 @@ http://localhost:8080
 ### Create sample Patient resource in example server
 
 I created this patient for testing, inserting the MRN that was in the
-dicom images I loaded. **Note the ID the server gives the resource so you
-can use it for testing. In this file, the number 34952 is used.**
+dicom image I loaded. **Note the ID the server gives the resource so you
+can use it for testing. In this file, the number 44952 is used.**
 
 ```
 {
@@ -151,43 +154,34 @@ can use it for testing. In this file, the number 34952 is used.**
                 "text":"Medical record number"
             },
             "system":"http://hospital.smarthealthit.org",
-            "value":"IIG-DEPT1021"
+            "value":"1288992"
         }
   ],
   "name": [
     {
       "family": [
-        "Levin"
+        "Adams"
       ],
       "given": [
-        "Henry"
-      ],
-      "suffix": [
-        "The 7th"
+        "Daniel"
       ]
     }
   ],
   "gender": "male",
-  "birthDate": "1932-09-24",
+  "birthDate": "1925-12-23",
   "active": true
 }
 ```
 ### Testing only code
 
 Special code for testing only is present in 
-- ca.uhn.fhir.jpa.demo.Utl.java and
-- ca.uhn.fhir.jpa.demo.WadoRsInterceptor 
+- ca.uhn.fhir.jpa.demo.Utl.java
 
 marked with a TODO comment.
 
-There are two "cludge" codings, which switch the patient id so that I can test 
-authentication until we get consistent test partner systems. These both
-reference the patient id 34952, which should be changed to the patient id you
-get when you add the above patient resource to the fhir server.
-
-The other items, which are in the Utl.java class, are for testing purposes, and
-give the root URLs for the test WADO, FHIR, and introspection servers. There is
-also a flag which can be used to enable or disable authentication for testing.
+They give the root URLs for the test WADO, FHIR, and introspection
+servers. There is also a flag which can be used to enable or disable
+authentication for testing.
 
 ### Testing the modifications to the example server
 
@@ -199,7 +193,7 @@ addons available for chrome also, or you can use curl.
 
 Test ImageStudy query (without authentication)
 ```
-GET http://localhost:8080/baseDstu3/ImagingStudy?patient=34952
+GET http://localhost:8080/baseDstu3/ImagingStudy?patient=44952
 ```
 with authentication
 ```
@@ -209,7 +203,7 @@ Authorization: Bearer authorizationTokenGoesHere
 
 GET Test WADO Study request (include Authorization header for authentication)
 ```
-http://localhost:8080/baseDstu3/studies/1.3.6.1.4.1.21367.201599.1.201606010958044
+http://localhost:8080/baseDstu3/studies/1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793094907821983261388534
 Authorization: Bearer authorizationTokenGoesHere
 ```
 

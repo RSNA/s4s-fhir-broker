@@ -19,6 +19,8 @@ import org.hl7.fhir.dstu3.model.Resource;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
@@ -131,11 +133,11 @@ public class WadoRsInterceptor extends InterceptorAdapter {
 				resp.setHeader(header, value);
 			}
 
-			while (true) {
-				final int read = conn.getInputStream().read(buffer);
-				if (read <= 0) break;
-				resp.getOutputStream().write(buffer, 0, read);
-			}
+			InputStream is = conn.getInputStream();
+			OutputStream os = resp.getOutputStream();
+			IOUtils.copy(is, os);
+			is.close();
+			os.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 			// pass
@@ -171,7 +173,7 @@ public class WadoRsInterceptor extends InterceptorAdapter {
 		for (int i = 0; i<(tokens.length -1); i++) if (tokens[i].equals("Patient")) pid = tokens[i+1];
 
 		// TODO this is the cludge, until we get consistent test data
-		if (pid.equals("34952")) pid = "smart-1288992";
+		// if (pid.equals("34952")) pid = "smart-1288992";
 
 		String authHdr = StringUtils.trimToEmpty(theRequest.getHeader("Authorization"));
 		if (StringUtils.startsWithIgnoreCase(authHdr, "Bearer ") == false)

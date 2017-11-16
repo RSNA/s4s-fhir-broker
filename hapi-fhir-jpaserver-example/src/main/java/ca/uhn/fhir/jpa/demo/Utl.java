@@ -41,7 +41,7 @@ public class Utl implements Cmn {
 	public static String getPatientMrn(String pid) throws Exception {
 
 		// TODO this is the cludge, until we get consistent test data
-		if (pid.equals("smart-1288992")) pid = "34952";
+		// if (pid.equals("smart-1288992")) pid = "34952";
 
 		String body = fhirQuery("/Patient/" + pid);
 

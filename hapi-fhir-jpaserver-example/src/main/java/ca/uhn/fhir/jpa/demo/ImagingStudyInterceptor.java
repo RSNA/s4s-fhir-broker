@@ -75,6 +75,8 @@ public class ImagingStudyInterceptor extends InterceptorAdapter implements Cmn {
 		if (pid == null)
 			throw new InvalidRequestException("Required parameter 'patient' not found.");
 
+		patientReferenceStr = "Patient/" + pid;
+
 		mrn = Utl.getPatientMrn(pid);
 
 		String body = wadoQuery(mrn, lu, patientReferenceStr, url);
@@ -157,7 +159,8 @@ public class ImagingStudyInterceptor extends InterceptorAdapter implements Cmn {
 
 				String d = dcmCodeMap.get(DCM_TAG_STUDY_DATE).get(0);
 				String t = dcmCodeMap.get(DCM_TAG_STUDY_TIME).get(0);
-				t = t.substring(0, t.indexOf("."));
+				if (isThere(t))
+				   t = t.substring(0, t.indexOf("."));
 				if (d.length() == 8) {
 					String fmt = "yyyyMMdd";
 					if (t.length() == 6) {
