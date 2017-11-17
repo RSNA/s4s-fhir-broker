@@ -50,14 +50,13 @@ public class ImagingStudyInterceptor extends InterceptorAdapter implements Cmn {
 		if (ot == null || ot != RestOperationTypeEnum.SEARCH_TYPE) return true;
 		System.out.println("ImageStudy intercepted");
 
-		authenticate(theRequestDetails, theRequest, theResponse);
+		String mrn = authenticate(theRequestDetails, theRequest, theResponse);
 
 		String url = theRequestDetails.getCompleteUrl();
 
 		Map<String, String[]> fhirParams = theRequestDetails.getParameters();
 
 		String pid = null;
-		String mrn = null;
 		String lu = null;
 		String patientReferenceStr = null;
 
@@ -76,8 +75,6 @@ public class ImagingStudyInterceptor extends InterceptorAdapter implements Cmn {
 			throw new InvalidRequestException("Required parameter 'patient' not found.");
 
 		patientReferenceStr = "Patient/" + pid;
-
-		mrn = Utl.getPatientMrn(pid);
 
 		String body = wadoQuery(mrn, lu, patientReferenceStr, url);
 		theResponse.addHeader("Content-Type", "application/fhir+json");
@@ -212,11 +209,10 @@ public class ImagingStudyInterceptor extends InterceptorAdapter implements Cmn {
 		return val != null && val.isEmpty() == false;
 	}
 
-	private void authenticate(RequestDetails theRequestDetails,
+	private String authenticate(RequestDetails theRequestDetails,
 									  HttpServletRequest theRequest, HttpServletResponse theResponse)
-		throws AuthenticationException, InvalidRequestException {
+		throws AuthenticationException, InvalidRequestException, Exception {
 
-		if (!Utl.AUTHENTICATION_ENABLED) return;
 
 		// Get, validate pid parameter
 		Map<String, String[]> requestParameters = theRequestDetails.getParameters();
@@ -234,7 +230,7 @@ public class ImagingStudyInterceptor extends InterceptorAdapter implements Cmn {
 			throw new AuthenticationException("Invalid Authorization token type");
 		String authToken = StringUtils.trimToEmpty(authTokenType.substring(6));
 
-		Utl.validate(pid, authToken, "ImageStudy", "read");
+		return Utl.validate(pid, authToken, "ImageStudy", "read");
 
 	}
 }

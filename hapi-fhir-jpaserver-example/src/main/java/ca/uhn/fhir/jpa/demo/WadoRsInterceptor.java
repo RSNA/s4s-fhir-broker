@@ -50,7 +50,7 @@ public class WadoRsInterceptor extends InterceptorAdapter {
 		String pid = getStudyPid(cp + sp, theRequest);
 		if (pid == null || pid.isEmpty()) throw new AuthenticationException();
 
-		authenticate(pid, theRequest, theResponse);
+		authenticate(theRequest, theResponse);
 
 		// This is the forward
 		forwardRequest(cp + sp, theRequest, theResponse);
@@ -144,43 +144,19 @@ public class WadoRsInterceptor extends InterceptorAdapter {
 		}
 	}
 
-	private void authenticate(String pid, HttpServletRequest theRequest, HttpServletResponse theResponse)
-		throws AuthenticationException, InvalidRequestException {
-		String body = null;
-		Bundle bundleResource = null;
-		Patient patientResource = null;
-
-		if (!Utl.AUTHENTICATION_ENABLED) return;
-
-		try {
-			body = Utl.fhirQuery("Patient?identifier=" + pid);
-		} catch (Exception e) {
-			throw new AuthenticationException(e.getMessage());
-		}
-		try {
-			FhirContext ctx = FhirContext.forDstu3();
-			IParser parser = ctx.newJsonParser();
-			bundleResource = parser.parseResource(Bundle.class, body);
-			Bundle.BundleEntryComponent firstEntry = bundleResource.getEntryFirstRep();
-			Resource resrc = firstEntry.getResource();
-			if (resrc instanceof Patient) patientResource = (Patient) resrc;
-			else throw new AuthenticationException("invalid patient");
-		} catch (DataFormatException dfe) {
-			throw new AuthenticationException(dfe.getMessage());
-		}
-		pid = patientResource.getId();
-		String[] tokens = pid.split("/");
-		for (int i = 0; i<(tokens.length -1); i++) if (tokens[i].equals("Patient")) pid = tokens[i+1];
-
-		// TODO this is the cludge, until we get consistent test data
-		// if (pid.equals("34952")) pid = "smart-1288992";
+	private void authenticate(HttpServletRequest theRequest, HttpServletResponse theResponse)
+		throws AuthenticationException, InvalidRequestException{
 
 		String authHdr = StringUtils.trimToEmpty(theRequest.getHeader("Authorization"));
 		if (StringUtils.startsWithIgnoreCase(authHdr, "Bearer ") == false)
 			throw new AuthenticationException("Invalid Authorization token type");
 		String authToken = StringUtils.trimToEmpty(authHdr.substring(6));
 
-		Utl.validate(pid, authToken, "ImageStudy", "read");
+		try {
+			Utl.validate(null, authToken, "ImageStudy", "read");
+		} catch (Exception e) {
+			throw new AuthenticationException(e.getMessage());
+		}
 
 	}
 }

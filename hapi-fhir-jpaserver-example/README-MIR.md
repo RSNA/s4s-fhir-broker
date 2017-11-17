@@ -122,78 +122,22 @@ My run configuration is:
 the Markdown Navigator Intellij Plugin, or 2) look at them in the docImgs
 subdirectory.**
 
-You will be able to access the server's built in client at
-
-http://localhost:8080
-
-### Create sample Patient resource in example server
-
-I created this patient for testing, inserting the MRN that was in the
-dicom image I loaded. **Note the ID the server gives the resource so you
-can use it for testing. In this file, the number 44952 is used.**
-
-```
-{
-  "resourceType": "Patient",
-  "identifier": [
-    {
-      "use": "usual",
-      "system": "http://www.goodhealth.org/identifiers/mrn",
-      "value": "123456"
-    },
-{
-            "use":"usual",
-            "type":{
-                "coding":[
-                    {
-                        "system":"http://hl7.org/fhir/v2/0203",
-                        "code":"MR",
-                        "display":"Medical record number"
-                    }
-                ],
-                "text":"Medical record number"
-            },
-            "system":"http://hospital.smarthealthit.org",
-            "value":"1288992"
-        }
-  ],
-  "name": [
-    {
-      "family": [
-        "Adams"
-      ],
-      "given": [
-        "Daniel"
-      ]
-    }
-  ],
-  "gender": "male",
-  "birthDate": "1925-12-23",
-  "active": true
-}
-```
 ### Testing only code
 
-Special code for testing only is present in 
-- ca.uhn.fhir.jpa.demo.Utl.java
-
-marked with a TODO comment.
-
-They give the root URLs for the test WADO, FHIR, and introspection
-servers. There is also a flag which can be used to enable or disable
-authentication for testing.
+Special code for testing only is present in ca.uhn.fhir.jpa.demo.Utl.java,
+marked with a TODO comment, that gives the root URLs for the test WADO
+and introspection servers.
 
 ### Testing the modifications to the example server
 
 Some of the tests can be run directly from the built in hapi client.
 For others you will need an http client that can handle restful 
 service calls. I just installed "RESTClient" in my firefox. There are 
-addons available for chrome also, or you can use curl. 
-**Note: you need to use the fhir patient id your patient got when you entered it.**
+addons available for chrome also, or you can use curl.
 
 Test ImageStudy query (without authentication)
 ```
-GET http://localhost:8080/baseDstu3/ImagingStudy?patient=44952
+GET http://localhost:8080/baseDstu3/ImagingStudy?patient=smart-1288992
 ```
 with authentication
 ```

@@ -23,31 +23,22 @@ import java.util.*;
 public class Utl implements Cmn {
 
 	// TODO For development only
-	static final String FHIR_SERVER_URL = "http://localhost:8080/baseDstu3";
 	static final String WADO_SERVER_URL = "http://localhost:9090/dcm4chee-arc/aets/DCM4CHEE/rs";
 	static final String INTROSPECTION_SERVICE_URL = "http://localhost:9004/api/introspect";
-	public static final boolean AUTHENTICATION_ENABLED = true;
 
 	public static String getWadoSrvUrl() {
 		return WADO_SERVER_URL;
 	}
 
 	/**
-	 * Gets MRN for patient reference.
-	 * @param pid the patient resource id
+	 * Gets MRN for patient
+	 * @param body of the introspection response
 	 * @return the MRN (first MRN for now)
 	 * @throws Exception on error, including patient not found.
-	 */
-	public static String getPatientMrn(String pid) throws Exception {
 
-		// TODO this is the cludge, until we get consistent test data
-		// if (pid.equals("smart-1288992")) pid = "34952";
-
-		String body = fhirQuery("/Patient/" + pid);
+	private static String getPatientMrn(String body) throws Exception {
 
 		FhirContext ctx = FhirContext.forDstu3();
-
-// Create a JSON parser
 		IParser parser = ctx.newJsonParser();
 		Patient pat = parser.parseResource(Patient.class, body);
 
@@ -70,7 +61,7 @@ public class Utl implements Cmn {
 		if (mrns.isEmpty()) return null;
 		return mrns.get(0);
 	}
-
+	 */
 	/**
 	 * WADO RS query for studies for patient.
 	 * @param mrn patient medical record number
@@ -181,54 +172,6 @@ public class Utl implements Cmn {
 	}
 
 	/**
-	 * FHIR query
-	 * @param cmd URL. If it doesn't begin with "http", the test fhir server base will be prefixed.
-	 * @return String body of the response.
-	 * @throws Exception on error.
-	 */
-	public static String fhirQuery(String cmd) throws Exception {
-		if (cmd.startsWith("http") == false) {
-			String prefix = FHIR_SERVER_URL;
-			if (cmd.startsWith("/") == false) {
-				prefix += "/";
-			}
-			cmd = prefix + cmd;
-		}final URL url = new URL(cmd);
-		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-		conn.setRequestMethod("GET");
-		conn.setRequestProperty("Accept-Charset", "utf-8");
-		conn.setRequestProperty("Accept", "application/fhir+json;q=1.0, application/json+fhir;q=0.9");
-	//	conn.setRequestProperty("Accept-Encoding", "gzip");
-
-		conn.setUseCaches(false);
-		conn.setDoInput(true);
-		conn.connect();
-
-		int responseCode = conn.getResponseCode();
-		if (responseCode != 200) throw new Exception("invalid returned status " + responseCode);
-
-		Map<String, List<String>> responseHeaders = conn.getHeaderFields();
-		List<String> responseContentTypes = responseHeaders.get("Content-Type");
-		if (responseContentTypes == null)
-			throw new Exception("Required header missing, 'Content-Type'");
-		if (responseContentTypes.size() != 1)
-			throw new Exception("Required header invalid, 'Content-Type'");
-		String responseContentType = responseContentTypes.get(0);
-		if (responseContentType == null)
-			throw new Exception("Required header empty, 'Content-Type'");
-		if (responseContentType.contains("json") == false)
-			throw new Exception("Content-Type " + responseContentType + " not supported");
-
-		StringWriter writer = new StringWriter();
-		IOUtils.copy(conn.getInputStream(), writer, "UTF-8");
-		String responseBody = writer.toString();
-		if (responseBody == null || responseBody.isEmpty())
-			throw new Exception("Response body empty");
-
-		return responseBody;
-	}
-
-	/**
 	 * Determines if a requested scope has been granted.
 	 * @param requestedResource FHIR Resource name or "*" for all FHIR resources
 	 * @param requestedAccess "read", "write", or "*" for read and write
@@ -279,16 +222,16 @@ public class Utl implements Cmn {
 	 * @param requestedAccess "read", "write", or "*" for both.
 	 * @throws AuthenticationException unless token is valid for this patient and requested access.
 	 */
-	public static void validate(String pid, String authToken, String requestedResource, String requestedAccess)
-		throws AuthenticationException {
-		if (pid == null || pid.isEmpty()) throw new AuthenticationException("Missing/Invalid Patient id");
+	public static String validate(String pid, String authToken, String requestedResource, String requestedAccess)
+		throws AuthenticationException, Exception {
 		if (authToken == null || authToken.isEmpty()) throw new AuthenticationException("Authorization token missing");
 
 		// Query token instrospection service
 		URL url = null;
 		try {
 			url = new URL(INTROSPECTION_SERVICE_URL);
-			String postData = "token=" + authToken + "&patient=" + pid;
+			String postData = "token=" + authToken;
+			if (StringUtils.isNotEmpty(pid)) postData += "&patient=" + pid;
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			conn.setUseCaches(false);
 			conn.setDoInput(true);
@@ -323,11 +266,18 @@ public class Utl implements Cmn {
 				throw new AuthenticationException("Response body empty");
 
 			JsonObject responseJson = (JsonObject) new JsonParser().parse(responseBody);
+			JsonElement active = responseJson.get("active");
+			if (active == null || active.getAsString().equalsIgnoreCase("true") == false)
+				throw new AuthenticationException("Authorization failed");
 			JsonElement scope = responseJson.get("scope");
-			if (scope == null) throw new AuthenticationException("Authorization failed");
-			String scopes = scope.getAsString();
-			if (Utl.isScopeAuthorized(requestedResource, requestedAccess, scopes)) return;
-			throw new AuthenticationException("Authorization failed");
+			if (scope == null || Utl.isScopeAuthorized(requestedResource, requestedAccess, scope.getAsString()) == false)
+				throw new AuthenticationException("Authorization failed");
+			JsonArray identifiers = (JsonArray) responseJson.get("identifier");
+			for (JsonElement identifier : identifiers) {
+				// todo working here to pull mrn out of identifier
+				return "1288992";
+			}
+			return null;
 
 		} catch (MalformedURLException e ) {
 			throw new AuthenticationException(e.getMessage());
