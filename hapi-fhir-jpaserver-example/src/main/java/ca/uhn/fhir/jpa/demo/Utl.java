@@ -10,6 +10,7 @@ import org.apache.http.auth.AUTH;
 import org.hl7.fhir.dstu3.model.*;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
@@ -19,9 +20,23 @@ import java.util.*;
 
 public class Utl implements Cmn {
 
-	// TODO For development only
-	static final String WADO_SERVER_URL = "http://localhost:9090/dcm4chee-arc/aets/DCM4CHEE/rs";
-	static final String INTROSPECTION_SERVICE_URL = "http://localhost:9004/api/introspect";
+	static String WADO_SERVER_URL = "http://localhost:9090/dcm4chee-arc/aets/DCM4CHEE/rs";
+	static String INTROSPECTION_SERVICE_URL = "http://localhost:9004/api/introspect";
+
+	static {
+		try {
+			InputStream is = Utl.class.getClassLoader().getResourceAsStream("utl.properties");
+			Properties properties = new Properties();
+			properties.load(is);
+			is.close();
+			String s = StringUtils.trimToNull(properties.getProperty("WADO_SERVER_URL"));
+			if (s != null) WADO_SERVER_URL = s;
+			s = StringUtils.trimToNull(properties.getProperty("INTROSPECTION_SERVICE_URL"));
+			if (s != null) INTROSPECTION_SERVICE_URL = s;
+		} catch (Exception e) {
+			System.out.println("Missing/invalid utl.properties. Using defaults");
+		}
+	}
 
 	public static String getWadoSrvUrl() {
 		return WADO_SERVER_URL;
