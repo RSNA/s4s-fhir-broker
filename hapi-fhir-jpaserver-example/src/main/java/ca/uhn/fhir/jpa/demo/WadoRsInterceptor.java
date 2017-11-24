@@ -47,10 +47,10 @@ public class WadoRsInterceptor extends InterceptorAdapter {
 		if (url.contains(cp + sp + "/studies/") == false) return true;
 
 
-		String pid = getStudyPid(cp + sp, theRequest);
-		if (pid == null || pid.isEmpty()) throw new AuthenticationException();
+		String mrn = getStudyMrn(cp + sp, theRequest);
+		if (mrn == null || mrn.isEmpty()) throw new AuthenticationException();
 
-		authenticate(theRequest, theResponse);
+		authenticate(mrn, theRequest, theResponse);
 
 		// This is the forward
 		forwardRequest(cp + sp, theRequest, theResponse);
@@ -66,7 +66,7 @@ public class WadoRsInterceptor extends InterceptorAdapter {
 	 * at this time exceptions are caught and printed, but ignored. This
 	 * won't do later on.
 	 */
-	private String getStudyPid (String prefix,  HttpServletRequest req) {
+	private String getStudyMrn (String prefix,  HttpServletRequest req) {
 		try {
 			prefix += "/studies/";
 			String cmd = req.getRequestURI().substring(prefix.length());
@@ -144,7 +144,7 @@ public class WadoRsInterceptor extends InterceptorAdapter {
 		}
 	}
 
-	private void authenticate(HttpServletRequest theRequest, HttpServletResponse theResponse)
+	private void authenticate(String mrn, HttpServletRequest theRequest, HttpServletResponse theResponse)
 		throws AuthenticationException, InvalidRequestException{
 
 		String authHdr = StringUtils.trimToEmpty(theRequest.getHeader("Authorization"));
@@ -153,7 +153,7 @@ public class WadoRsInterceptor extends InterceptorAdapter {
 		String authToken = StringUtils.trimToEmpty(authHdr.substring(6));
 
 		try {
-			Utl.validate(null, authToken, "ImageStudy", "read");
+			Utl.validateMrn(mrn, authToken, "ImageStudy", "read");
 		} catch (Exception e) {
 			throw new AuthenticationException(e.getMessage());
 		}

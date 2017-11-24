@@ -70,11 +70,21 @@ User: admin, pw: admin
 ### Load test images into dcm4chee server
 
 I loaded one test image in the dcm4chee server.
-It is in the 'testImages' directory in this project
-if you would like to use it. I used the CTN utility send_image
+There are two versions of this image file in the 'testImages' directory
+in this project if you would like to use one. The file name in testImages
+is of the form mrn-familyName.dcm. If you need to change any of the
+dicom tags, you could use the CTN utility dcmodify. For example, to
+create a new file with a different mrn:
+```
+dcmodify -i "(0x0010,0x0020)=newMrn" 1288992-adams.dcm
+```
+There is a sample changes file for dcmodify in the directory also,
+called "mods".
+
+I used the CTN utility send_image
 from the directory the image was in:
 ```
-send_image -c DCM4CHEE -Z localhost 11112 *
+send_image -c DCM4CHEE -Z localhost 11112 1288992-adams.dcm
 ```
 This loaded an anonymized Chest CR
 
@@ -135,11 +145,7 @@ For others you will need an http client that can handle restful
 service calls. I just installed "RESTClient" in my firefox. There are 
 addons available for chrome also, or you can use curl.
 
-Test ImageStudy query (without authentication)
-```
-GET http://localhost:8080/baseDstu3/ImagingStudy?patient=smart-1288992
-```
-with authentication
+Test ImageStudy query
 ```
 http://localhost:8080/baseDstu3/ImagingStudy?patient=smart-1288992
 Authorization: Bearer authorizationTokenGoesHere

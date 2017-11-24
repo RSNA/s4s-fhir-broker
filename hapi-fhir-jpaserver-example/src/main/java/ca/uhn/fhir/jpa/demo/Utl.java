@@ -3,10 +3,7 @@ package ca.uhn.fhir.jpa.demo;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.auth.AUTH;
@@ -29,18 +26,16 @@ public class Utl implements Cmn {
 	public static String getWadoSrvUrl() {
 		return WADO_SERVER_URL;
 	}
+	private static Gson gson = new Gson();
+	private static FhirContext ctx = FhirContext.forDstu3();
 
 	/**
 	 * Gets MRN for patient
-	 * @param body of the introspection response
+	 * @param pat Patient resource
 	 * @return the MRN (first MRN for now)
 	 * @throws Exception on error, including patient not found.
-
-	private static String getPatientMrn(String body) throws Exception {
-
-		FhirContext ctx = FhirContext.forDstu3();
-		IParser parser = ctx.newJsonParser();
-		Patient pat = parser.parseResource(Patient.class, body);
+    */
+	private static String getPatientMrn(Patient pat) throws Exception {
 
 		List<String> mrns = new ArrayList<String>();
 		nxtId: for (Identifier id : pat.getIdentifier()) {
@@ -57,11 +52,10 @@ public class Utl implements Cmn {
 				}
 			}
 		}
-
 		if (mrns.isEmpty()) return null;
 		return mrns.get(0);
 	}
-	 */
+
 	/**
 	 * WADO RS query for studies for patient.
 	 * @param mrn patient medical record number
@@ -215,23 +209,22 @@ public class Utl implements Cmn {
 
 
 	/**
-	 * Authorization validation
-	 * @param pid patient resource id
+	 * Authorization validation using fhir patient reference id
+	 * @param pid patient resource reference id
 	 * @param authToken authorization token
 	 * @param requestedResource resource, or "*"
 	 * @param requestedAccess "read", "write", or "*" for both.
 	 * @throws AuthenticationException unless token is valid for this patient and requested access.
 	 */
-	public static String validate(String pid, String authToken, String requestedResource, String requestedAccess)
+	public static String validatePid(String pid, String authToken, String requestedResource, String requestedAccess)
 		throws AuthenticationException, Exception {
 		if (authToken == null || authToken.isEmpty()) throw new AuthenticationException("Authorization token missing");
 
-		// Query token instrospection service
+		// Query token introspection service
 		URL url = null;
 		try {
 			url = new URL(INTROSPECTION_SERVICE_URL);
-			String postData = "token=" + authToken;
-			if (StringUtils.isNotEmpty(pid)) postData += "&patient=" + pid;
+			String postData = "token=" + authToken + "&patient=" + pid;
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			conn.setUseCaches(false);
 			conn.setDoInput(true);
@@ -265,19 +258,90 @@ public class Utl implements Cmn {
 			if (responseBody == null || responseBody.isEmpty())
 				throw new AuthenticationException("Response body empty");
 
-			JsonObject responseJson = (JsonObject) new JsonParser().parse(responseBody);
-			JsonElement active = responseJson.get("active");
-			if (active == null || active.getAsString().equalsIgnoreCase("true") == false)
+			JsonObject responseJson = new JsonParser().parse(responseBody).getAsJsonObject();
+			Utl.is (responseJson, "active", "true");
+			String scope = Utl.is (responseJson, "scope", "*");
+			if (Utl.isScopeAuthorized(requestedResource, requestedAccess, scope) == false)
 				throw new AuthenticationException("Authorization failed");
-			JsonElement scope = responseJson.get("scope");
-			if (scope == null || Utl.isScopeAuthorized(requestedResource, requestedAccess, scope.getAsString()) == false)
+			// pull MRN out of identifier list
+			JsonObject patient = responseJson.getAsJsonObject("patient");
+			String patientstr = gson.toJson(patient);
+			Patient p = ctx.newJsonParser().parseResource(Patient.class, patientstr);
+			return getPatientMrn(p);
+
+		} catch (MalformedURLException e ) {
+			throw new AuthenticationException(e.getMessage());
+		} catch (IOException io) {
+			throw new AuthenticationException(io.getMessage());
+		}
+
+	}/**
+	 * Authorization validation
+	 * @param mrn patient medical record number
+	 * @param authToken authorization token
+	 * @param requestedResource resource, or "*"
+	 * @param requestedAccess "read", "write", or "*" for both.
+	 * @return String Patient resource id of patient
+	 * @throws AuthenticationException unless token is valid for this patient and requested access.
+	 */
+	public static String validateMrn(String mrn, String authToken, String requestedResource, String requestedAccess)
+		throws AuthenticationException, Exception {
+		if (authToken == null || authToken.isEmpty()) throw new AuthenticationException("Authorization token missing");
+
+		// Query token instrospection service
+		URL url = null;
+		try {
+			url = new URL(INTROSPECTION_SERVICE_URL);
+			String postData = "token=" + authToken;
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			conn.setUseCaches(false);
+			conn.setDoInput(true);
+			conn.setDoOutput(true);
+			conn.setRequestMethod("POST");
+			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+			conn.setRequestProperty("Content-Length", "" + postData.getBytes().length);
+			conn.setRequestProperty("Content-Language", "en-US");
+			OutputStream os = conn.getOutputStream();
+			os.write(postData.getBytes("UTF-8"));
+			os.close();
+			conn.connect();
+
+			if (conn.getResponseCode() != 200) throw new AuthenticationException("Authorization failed");
+
+			Map<String, List<String>> responseHeaders = conn.getHeaderFields();
+			List<String> responseContentTypes = responseHeaders.get("Content-Type");
+			if (responseContentTypes == null)
+				throw new AuthenticationException("Required header missing, 'Content-Type'");
+			if (responseContentTypes.size() != 1)
+				throw new AuthenticationException("Required header invalid, 'Content-Type'");
+			String responseContentType = responseContentTypes.get(0);
+			if (responseContentType == null)
+				throw new AuthenticationException("Required header empty, 'Content-Type'");
+			if (responseContentType.contains("json") == false)
+				throw new AuthenticationException("Content-Type " + responseContentType + " not supported");
+
+			StringWriter writer = new StringWriter();
+			IOUtils.copy(conn.getInputStream(), writer, "UTF-8");
+			String responseBody = writer.toString();
+			if (responseBody == null || responseBody.isEmpty())
+				throw new AuthenticationException("Response body empty");
+
+			JsonObject responseJson = new JsonParser().parse(responseBody).getAsJsonObject();
+			Utl.is (responseJson, "active", "true");
+			String scope = Utl.is (responseJson, "scope", "*");
+			if (Utl.isScopeAuthorized(requestedResource, requestedAccess, scope) == false)
 				throw new AuthenticationException("Authorization failed");
-			JsonArray identifiers = (JsonArray) responseJson.get("identifier");
-			for (JsonElement identifier : identifiers) {
-				// todo working here to pull mrn out of identifier
-				return "1288992";
+			// pull MRN out of identifier list
+			JsonObject patient = responseJson.getAsJsonObject("patient");
+			JsonArray entries = patient.getAsJsonArray("entry");
+			for (JsonElement entry : entries) {
+				JsonObject resource = entry.getAsJsonObject().getAsJsonObject("resource");
+				String patientstr = gson.toJson(resource);
+				Patient p = ctx.newJsonParser().parseResource(Patient.class, patientstr);
+				String patientmrn = getPatientMrn(p);
+				if (mrn.equals(patientmrn)) return p.getId();
 			}
-			return null;
+			throw new AuthenticationException("Access not authorized");
 
 		} catch (MalformedURLException e ) {
 			throw new AuthenticationException(e.getMessage());
@@ -286,4 +350,21 @@ public class Utl implements Cmn {
 		}
 
 	}
+
+	private static String get(JsonObject object, String name) {
+		if (!object.has(name)) return null;
+		JsonElement element = object.get(name);
+		if (element == null) return null;
+		return StringUtils.trimToNull(element.getAsString());
+	}
+
+	private static String is(JsonObject object, String name, String match) {
+		boolean is = true;
+		String value = get(object, name);
+		if (value == null) is = false;
+		if (match.equals("*") == false && value.equalsIgnoreCase(match) == false) is = false;
+		if (!is) throw new AuthenticationException("Authorization failed");
+		return value;
+	}
+
 }
