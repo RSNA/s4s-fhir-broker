@@ -1,5 +1,7 @@
 #!/bin/sh
 
-mvn package && \
-  docker build -t hapi-fhir/hapi-fhir-jpaserver-example .
+cd ..
+mvn package -Dmaven.test.skip=true
+cd hapi-fhir-jpaserver-example
+docker build -t rsna/s4s-fhir-broker .
 

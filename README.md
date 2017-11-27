@@ -1,12 +1,10 @@
-Note: To see the screenshots in this readme in Intellij, you can
-1) Install the Markdown Navigator Intellij Plugin, or
-2) look at them in the docImgs subdirectory.
+## S4S FHIR Image Broker
+The broker requires a WADO RS Image source and an
+introspection server for testing. You can provide these yourself,
+or use the test setups here:
 
-## Running modified server for Image processing testing
-Note: The port assignments shown here **MUST** be used, as the 
-modified example server is a prototype only; some things are
-hard coded.
-### Set up a dcm4chee server for testing
+### Set up a dcm4chee based WADO RS Image source server for testing
+_(Skip this section if you have your own WADO RS Image source.)_
 
 A dockerized dcm4chee is used for testing. Setting it up 
 involves three containers. I found that running each container
@@ -68,6 +66,9 @@ User: admin, pw: admin
 - WADO-RS  Base URL: http://localhost:9090/dcm4chee-arc/aets/DCM4CHEE/rs
 
 ### Load test images into dcm4chee server
+_(The instructions here show how to load test images into the dcm4chee
+test server. You will need to modify them is you are using your own WADO
+RS Image Source.)_
 
 I loaded one test image in the dcm4chee server.
 There are two versions of this image file in the 'testImages' directory
@@ -100,7 +101,8 @@ This loaded an anonymized Chest CR
 - (0x0020,0x000d) StudyInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793094907821983261388534
 - (0x0020,0x000e) SeriesInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.210102868760281756294235082201
 
-### run the instrospection service
+### Set up and run Matt Kelsey's test introspection service
+_(Skip this section if you are using your own introspection service.)_
 
 Clone the Introspection Service application from github:
 ```
@@ -116,8 +118,32 @@ which will make request to:
 ```
 https://portal.demo.syncfor.science/api/fhir
 ```
+### Configuring the s4s FHIR Broker
 
-### run the example server
+By default, the broker points to the test WADO RS source and instrospection
+servers described above. To point to different locations, edit the file
+hapi-fhir-jpaserver-example/utl.properties:
+```
+WADO_SERVER_URL = http://localhost:9090/dcm4chee-arc/aets/DCM4CHEE/rs
+INTROSPECTION_SERVICE_URL = http://localhost:9004/api/introspect
+```
+to provide the appropriate base URLs.
+
+### run the test s4s FHIR Broker as a Docker Container
+
+To build the docker file, make hapi-fhir-jpaserver-example your current
+directory and run:
+```
+./build-docker-image.sh
+```
+this will create an image with the label "rsna/s4s-fhir-broker".
+
+To run the image, use (for example):
+```
+docker run -p 8080:8080 rsna/s4s-fhir-broker
+```
+
+### run the test s4s FHIR Broker from Intellij.
 I run the modified example server from Intellij on a tomcat server instance.
 My run configuration is:
 ##### Edit Configurations Dialog, Run Tab
@@ -126,24 +152,11 @@ My run configuration is:
 ##### Edit Configurations Dialog, Deployment Tab
 ![Deployment Tab](./hapi-fhir-jpaserver-example/docImgs/runConfigDeploymentTab.png?raw=true)
 ##### and the Tomcat server dialog
-![Application Server Dialog](./docImgs/applicationServerDialog.png?raw=true)
-
-**Note: To see the screenshots above in Intellij, you can 1) Install
-the Markdown Navigator Intellij Plugin, or 2) look at them in the docImgs
-subdirectory.**
-
-### Testing only code
-
-Special code for testing only is present in ca.uhn.fhir.jpa.demo.Utl.java,
-marked with a TODO comment, that gives the root URLs for the test WADO
-and introspection servers.
+![Application Server Dialog](./hapi-fhir-jpaserver-example/docImgs/applicationServerDialog.png?raw=true)
 
 ### Testing the modifications to the example server
 
-Some of the tests can be run directly from the built in hapi client.
-For others you will need an http client that can handle restful 
-service calls. I just installed "RESTClient" in my firefox. There are 
-addons available for chrome also, or you can use curl.
+Use the Restful client of your choice to run tests.
 
 Test ImageStudy query
 ```
@@ -166,7 +179,7 @@ and, in the request body:
 ?token=authorizationTokenGoesHere$patient=smart-1288992
 ```
 ### How to generate an authentication token for testing
-When testing, be sure that Utl#AUTHENTICATION_ENABLED is true.
+_(This applies if you are using Matt Kelsey's introspection server.)_
 
 1. Navigate to https://tests.demo.syncfor.science
 
