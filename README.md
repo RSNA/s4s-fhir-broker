@@ -122,9 +122,9 @@ I run the modified example server from Intellij on a tomcat server instance.
 My run configuration is:
 ##### Edit Configurations Dialog, Run Tab
 
-![Server Tab](./docImgs/runConfigServerTab.png?raw=true)
+![Server Tab](./hapi-fhir-jpaserver-example/docImgs/runConfigServerTab.png?raw=true)
 ##### Edit Configurations Dialog, Deployment Tab
-![Deployment Tab](./docImgs/runConfigDeploymentTab.png?raw=true)
+![Deployment Tab](./hapi-fhir-jpaserver-example/docImgs/runConfigDeploymentTab.png?raw=true)
 ##### and the Tomcat server dialog
 ![Application Server Dialog](./docImgs/applicationServerDialog.png?raw=true)
 
@@ -170,17 +170,17 @@ When testing, be sure that Utl#AUTHENTICATION_ENABLED is true.
 
 1. Navigate to https://tests.demo.syncfor.science
 
-![s4s-1](./docImgs/s4s-1.png?raw=true)
+![s4s-1](./hapi-fhir-jpaserver-example/docImgs/s4s-1.png?raw=true)
 
 2. Select Vendor: SMART
 3. Click on "Show more options"
 
-![s4s-1](./docImgs/s4s-2.png?raw=true)
+![s4s-1](./hapi-fhir-jpaserver-example/docImgs/s4s-2.png?raw=true)
 
 4. Next to "Tags", click on "None"
 5. then click on "patient-demographics"
 
-![s4s-1](./docImgs/s4s-3.png?raw=true)
+![s4s-1](./hapi-fhir-jpaserver-example/docImgs/s4s-3.png?raw=true)
 
 6. Click on the "Run tests" button.
 7. A "Tests complete!" dialog will display; click on its "x"
@@ -188,7 +188,7 @@ to dismiss it.
 8. On the right panel, click on "Feature: Patient demographics".
 A "Method URL" table with one row should appear.
 
-![s4s-1](./docImgs/s4s-4.png?raw=true)
+![s4s-1](./hapi-fhir-jpaserver-example/docImgs/s4s-4.png?raw=true)
 
 9. Click on the URL, which should read:
 ```
