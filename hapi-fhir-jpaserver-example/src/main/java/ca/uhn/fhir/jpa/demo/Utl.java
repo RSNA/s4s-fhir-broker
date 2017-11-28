@@ -24,17 +24,26 @@ public class Utl implements Cmn {
 	static String INTROSPECTION_SERVICE_URL = "http://localhost:9004/api/introspect";
 
 	static {
+		String s = null;
 		try {
 			InputStream is = Utl.class.getClassLoader().getResourceAsStream("utl.properties");
 			Properties properties = new Properties();
 			properties.load(is);
 			is.close();
-			String s = StringUtils.trimToNull(properties.getProperty("WADO_SERVER_URL"));
+			s = StringUtils.trimToNull(properties.getProperty("WADO_SERVER_URL"));
 			if (s != null) WADO_SERVER_URL = s;
 			s = StringUtils.trimToNull(properties.getProperty("INTROSPECTION_SERVICE_URL"));
 			if (s != null) INTROSPECTION_SERVICE_URL = s;
 		} catch (Exception e) {
-			System.out.println("Missing/invalid utl.properties. Using defaults");
+			System.out.println("Missing/invalid utl.properties.");
+		}
+		try {
+			s = StringUtils.trimToNull(System.getenv("WADO_SERVER_URL"));
+			if (s != null) WADO_SERVER_URL = s;
+			s = StringUtils.trimToNull(System.getenv("INTROSPECTION_SERVICE_URL"));
+			if (s != null) INTROSPECTION_SERVICE_URL = s;
+		} catch (SecurityException se) {
+			System.out.println("Security Exception accessing environment variables.");
 		}
 	}
 

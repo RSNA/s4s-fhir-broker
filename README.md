@@ -67,7 +67,7 @@ User: admin, pw: admin
 
 ### Load test images into dcm4chee server
 _(The instructions here show how to load test images into the dcm4chee
-test server. You will need to modify them is you are using your own WADO
+test server. You will need to modify them if you are using your own WADO
 RS Image Source.)_
 
 I loaded one test image in the dcm4chee server.
@@ -127,7 +127,10 @@ hapi-fhir-jpaserver-example/utl.properties:
 WADO_SERVER_URL = http://localhost:9090/dcm4chee-arc/aets/DCM4CHEE/rs
 INTROSPECTION_SERVICE_URL = http://localhost:9004/api/introspect
 ```
-to provide the appropriate base URLs.
+to provide the appropriate base URLs. These values may also be set using
+environment variables in the docker run command, as shown in the example
+below. values passed using environment variables override those in the
+utl.properties files.
 
 ### run the test s4s FHIR Broker as a Docker Container
 
@@ -140,7 +143,10 @@ this will create an image with the label "rsna/s4s-fhir-broker".
 
 To run the image, use (for example):
 ```
-docker run -p 8080:8080 rsna/s4s-fhir-broker
+docker run -p 8080:8080 \
+   -e WADO_SERVER_URL="http://wadohost.org:9090/wadors" \
+   -e INTROSPECTION_SERVICE_URL="http://introhost:9004/introspect" \
+   rsna/s4s-fhir-broker
 ```
 
 ### run the test s4s FHIR Broker from Intellij.
