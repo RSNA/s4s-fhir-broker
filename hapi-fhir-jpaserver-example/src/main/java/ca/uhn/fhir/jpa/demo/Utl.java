@@ -124,6 +124,9 @@ public class Utl implements Cmn {
 		final URL url = new URL(cmd);
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setRequestMethod("GET");
+		conn.setRequestProperty("Accept-Charset", "utf-8");
+		conn.setRequestProperty("Accept-Encoding", "deflate,sdch");
+		conn.setRequestProperty("Accept", "application/json");
 
 		conn.setUseCaches(false);
 		conn.setDoInput(true);
@@ -141,19 +144,26 @@ public class Utl implements Cmn {
 		String responseContentType = responseContentTypes.get(0);
 		if (responseContentType == null)
 			throw new Exception("Required header empty, 'Content-Type'");
-		if (responseContentType.equalsIgnoreCase("application/dicom+json") == false)
+		if (responseContentType.contains("json") == false)
 			throw new Exception("Content-Type " + responseContentType + " not supported");
 
 		StringWriter writer = new StringWriter();
 		IOUtils.copy(conn.getInputStream(), writer, "UTF-8");
-		String responseBody = writer.toString();
-		if (responseBody == null || responseBody.isEmpty())
+		String responseBody = StringUtils.trimToEmpty(writer.toString());
+		if (responseBody.isEmpty())
 			throw new Exception("Response body empty");
 
 		/*
 		 * parse the json returned by the WADO query. At this point we presume the
 		 * format is valid. An Exception will be thrown if it isn't (I think).
 	    */
+
+		/* TODO invalid json being received from dicom rs broker.
+		   This cludge fixes last char being '}' instead of ']'
+		 */
+		if (responseBody.startsWith("[") && responseBody.endsWith("}")) {
+			responseBody += "]";
+		}
 
 		List<Map<String, List<String>>> studies = new ArrayList<Map<String, List<String>>>();
 		// The highest level is an array.

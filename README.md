@@ -63,31 +63,51 @@ a dcm4chee server with:
 - HL7_PORT = 2575
 - Wildfly Administration Console: http://localhost:9990, 
 User: admin, pw: admin
+- Archive console http://localhost:9090/dcm4chee-arc/ui2
 - WADO-RS  Base URL: http://localhost:9090/dcm4chee-arc/aets/DCM4CHEE/rs
+
+You can use the Archive console to check your images and their tag
+values. It is not necessary to add Application Entry entries for C-STORE
+AE's, as the broker is set up to accept any value for the sending AE.
+
+You will need to add an Application Entities for the SCP which will be
+referenced by the dcmrs broker. To do this,
+
+1. Bring up the Archive console in a web browser, using the URL above.
+2. Click on the menu button in the upper right corner.
+
+![Server Tab](./hapi-fhir-jpaserver-example/docImgs/menuIcon.png?raw=true)
+
+3. From the menu, select "Configuration"
+
+![Server Tab](./hapi-fhir-jpaserver-example/docImgs/menu.png?raw=true)
+
+4. In the Configuration dialog, click on the AE list tab, then on the '+'
+icon to add the SCP. An example is shown.
+
+![Server Tab](./hapi-fhir-jpaserver-example/docImgs/scpAdd.png?raw=true)
 
 ### Load test images into dcm4chee server
 _(The instructions here show how to load test images into the dcm4chee
 test server. You will need to modify them if you are using your own WADO
 RS Image Source.)_
 
-I loaded one test image in the dcm4chee server.
-There are two versions of this image file in the 'testImages' directory
-in this project if you would like to use one. The file name in testImages
-is of the form mrn-familyName.dcm. If you need to change any of the
-dicom tags, you could use the CTN utility dcmodify. For example, to
-create a new file with a different mrn:
+There is a docker image which contains dicom test images which can be
+loaded into the test archive. At present it contains one set of images,
+named "smart-1288992", which contains an anonymized Chest CR. It can be
+run as follows:
 ```
-dcmodify -i "(0x0010,0x0020)=newMrn" 1288992-adams.dcm
+docker run \
+   -e DEST_PACS="DCM4CHEE@10.252.175.44:11112" \
+   -e IMAGE_SET="smart-1288992" \
+   nameTBD
 ```
-There is a sample changes file for dcmodify in the directory also,
-called "mods".
+using information for your own test PACS archive and the name of the
+image set you want to load. The above environment values are the defaults.
+**Note:** It is important to put the actual IP address of the PACS
+archive, not "localhost", even if that is the case.
 
-I used the CTN utility send_image
-from the directory the image was in:
-```
-send_image -c DCM4CHEE -Z localhost 11112 1288992-adams.dcm
-```
-This loaded an anonymized Chest CR
+The "smart-1288992" data set image has these tags:
 
 - (0x0008,0x0016) SOP Class UID = 1.2.840.10008.5.1.4.1.1.1
 - (0x0008,0x0018) SOPInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.144065313879447963369902174642
@@ -101,12 +121,41 @@ This loaded an anonymized Chest CR
 - (0x0020,0x000d) StudyInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793094907821983261388534
 - (0x0020,0x000e) SeriesInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.210102868760281756294235082201
 
+### Set up and run RSNA DICOM-RS Broker
+Clone the broker from github:
+```
+git clone https://github.com/RSNA/dcmrs-broker.git
+```
+From within the dcmrs-broker directory
+```
+docker build -t rsna/dcmrs-broker .
+```
+and then run the image
+```
+docker run \
+    -p 4567:4567 \
+    -p 11122:11112 \
+    -e QIDO_REMOTE_AE="DCM4CHEE" \
+    -e QIDO_REMOTE_HOST="10.252.175.44" \
+    -e QIDO_REMOTE_PORT="11112" \
+    -e QIDO_LOCAL_AE="QIDO-TESTING" \
+    -e WAD0_REMOTE_AE="DCM4CHEE" \
+    -e WADO_REMOTE_HOST="10.252.175.44" \
+    -e WADO_LOCAL_AE="WADO-TESTING" \
+    -e SCP_LOCAL_AE="PACS-SCP" \
+    rsna/dcmrs-broker
+```
+**Note:** The AE titles do not have to be set up in the dcm4che3e archive.
+However, it is important to use the actual IP address for the remote host.
+Do not use "localhost" or "127.0.0.1", even if the containers are on the
+same system.
+
 ### Set up and run Matt Kelsey's test introspection service
 _(Skip this section if you are using your own introspection service.)_
 
 Clone the Introspection Service application from github:
 ```
-clone https://github.com/kelseym/introspection-service.git
+git clone https://github.com/kelseym/introspection-service.git
 ```
 From within the introspection-service directory, build and start the introspection service:
 ```
@@ -124,7 +173,7 @@ By default, the broker points to the test WADO RS source and instrospection
 servers described above. To point to different locations, edit the file
 hapi-fhir-jpaserver-example/utl.properties:
 ```
-WADO_SERVER_URL = http://localhost:9090/dcm4chee-arc/aets/DCM4CHEE/rs
+WADO_SERVER_URL = http://localhost:4567/qido-rs
 INTROSPECTION_SERVICE_URL = http://localhost:9004/api/introspect
 ```
 to provide the appropriate base URLs. These values may also be set using
@@ -144,8 +193,8 @@ this will create an image with the label "rsna/s4s-fhir-broker".
 To run the image, use (for example):
 ```
 docker run -p 8080:8080 \
-   -e WADO_SERVER_URL="http://wadohost.org:9090/wadors" \
-   -e INTROSPECTION_SERVICE_URL="http://introhost:9004/introspect" \
+   -e WADO_SERVER_URL="http://localhost:4567/wado-rs" \
+   -e INTROSPECTION_SERVICE_URL="http://localhost:9004/api/introspect" \
    rsna/s4s-fhir-broker
 ```
 
