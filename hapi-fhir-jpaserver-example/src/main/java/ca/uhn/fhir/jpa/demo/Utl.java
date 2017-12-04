@@ -20,7 +20,8 @@ import java.util.*;
 
 public class Utl implements Cmn {
 
-	static String WADO_SERVER_URL = "http://localhost:9090/dcm4chee-arc/aets/DCM4CHEE/rs";
+	static String DICOM_RS_BROKER_QIDO_URL = "http://localhost:4567/qido-rs";
+	static String DICOM_RS_BROKER_WADO_URL = "http://localhost:4567/wado-rs";
 	static String INTROSPECTION_SERVICE_URL = "http://localhost:9004/api/introspect";
 
 	static {
@@ -30,16 +31,20 @@ public class Utl implements Cmn {
 			Properties properties = new Properties();
 			properties.load(is);
 			is.close();
-			s = StringUtils.trimToNull(properties.getProperty("WADO_SERVER_URL"));
-			if (s != null) WADO_SERVER_URL = s;
+			s = StringUtils.trimToNull(properties.getProperty("DICOM_RS_BROKER_QIDO_URL"));
+			if (s != null) DICOM_RS_BROKER_QIDO_URL = s;
+			s = StringUtils.trimToNull(properties.getProperty("DICOM_RS_BROKER_WADO_URL"));
+			if (s != null) DICOM_RS_BROKER_WADO_URL = s;
 			s = StringUtils.trimToNull(properties.getProperty("INTROSPECTION_SERVICE_URL"));
 			if (s != null) INTROSPECTION_SERVICE_URL = s;
 		} catch (Exception e) {
 			System.out.println("Missing/invalid utl.properties.");
 		}
 		try {
-			s = StringUtils.trimToNull(System.getenv("WADO_SERVER_URL"));
-			if (s != null) WADO_SERVER_URL = s;
+			s = StringUtils.trimToNull(System.getenv("DICOM_RS_BROKER_QIDO_URL"));
+			if (s != null) DICOM_RS_BROKER_QIDO_URL = s;
+			s = StringUtils.trimToNull(System.getenv("DICOM_RS_BROKER_WADO_URL"));
+			if (s != null) DICOM_RS_BROKER_WADO_URL = s;
 			s = StringUtils.trimToNull(System.getenv("INTROSPECTION_SERVICE_URL"));
 			if (s != null) INTROSPECTION_SERVICE_URL = s;
 		} catch (SecurityException se) {
@@ -47,8 +52,11 @@ public class Utl implements Cmn {
 		}
 	}
 
-	public static String getWadoSrvUrl() {
-		return WADO_SERVER_URL;
+	public static String getQidoURL() {
+		return DICOM_RS_BROKER_QIDO_URL;
+	}
+	public static String getWadoURL() {
+		return DICOM_RS_BROKER_WADO_URL;
 	}
 	private static Gson gson = new Gson();
 	private static FhirContext ctx = FhirContext.forDstu3();
@@ -103,7 +111,7 @@ public class Utl implements Cmn {
 	}
 
 	/**
-	 * WADO query
+	 * QIDO
 	 * @param cmd URL to query
 	 * @param lastUpdated if not null, represents a datetime; studies started before this
 	 *                    should be ignored. looks for yyyyMMddhhMMss, or any prefix thereof.
@@ -115,7 +123,7 @@ public class Utl implements Cmn {
 		public static List<Map<String, List<String>>> wadoQuery(String cmd, String lastUpdated)
 		throws Exception {
 			if (cmd.startsWith("http") == false) {
-				String prefix = Utl.getWadoSrvUrl();
+				String prefix = Utl.getQidoURL();
 				if (cmd.startsWith("/") == false) {
 					prefix += "/";
 				}
@@ -154,16 +162,8 @@ public class Utl implements Cmn {
 			throw new Exception("Response body empty");
 
 		/*
-		 * parse the json returned by the WADO query. At this point we presume the
-		 * format is valid. An Exception will be thrown if it isn't (I think).
+		 * parse the json returned by the WADO query.
 	    */
-
-		/* TODO invalid json being received from dicom rs broker.
-		   This cludge fixes last char being '}' instead of ']'
-		 */
-		if (responseBody.startsWith("[") && responseBody.endsWith("}")) {
-			responseBody += "]";
-		}
 
 		List<Map<String, List<String>>> studies = new ArrayList<Map<String, List<String>>>();
 		// The highest level is an array.

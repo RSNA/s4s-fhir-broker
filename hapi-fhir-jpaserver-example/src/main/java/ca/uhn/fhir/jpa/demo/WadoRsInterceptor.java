@@ -97,7 +97,7 @@ public class WadoRsInterceptor extends InterceptorAdapter {
 
 		try {
 			String cmd = req.getRequestURI().substring(prefix.length());
-			final URL url = new URL(Utl.getWadoSrvUrl()  // no trailing slash
+			final URL url = new URL(Utl.getWadoURL()  // no trailing slash
 				+ cmd
 				+ (req.getQueryString() != null ? "?" + req.getQueryString() : ""));
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();

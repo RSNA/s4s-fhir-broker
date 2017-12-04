@@ -173,7 +173,8 @@ By default, the broker points to the test WADO RS source and instrospection
 servers described above. To point to different locations, edit the file
 hapi-fhir-jpaserver-example/utl.properties:
 ```
-WADO_SERVER_URL = http://localhost:4567/qido-rs
+DICOM_RS_BROKER_QIDO_URL = http://localhost:4567/qido-rs
+DICOM_RS_BROKER_WADO_URL = http://localhost:4567/wado-rs
 INTROSPECTION_SERVICE_URL = http://localhost:9004/api/introspect
 ```
 to provide the appropriate base URLs. These values may also be set using
@@ -193,7 +194,8 @@ this will create an image with the label "rsna/s4s-fhir-broker".
 To run the image, use (for example):
 ```
 docker run -p 8080:8080 \
-   -e WADO_SERVER_URL="http://localhost:4567/wado-rs" \
+   -e DICOM_RS_BROKER_QIDO_URL="http://localhost:4567/qido-rs" \
+   -e DICOM_RS_BROKER_WADO_URL="http://localhost:4567/wado-rs" \
    -e INTROSPECTION_SERVICE_URL="http://localhost:9004/api/introspect" \
    rsna/s4s-fhir-broker
 ```

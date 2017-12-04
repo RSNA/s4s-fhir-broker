@@ -116,46 +116,48 @@ public class ImagingStudyInterceptor extends InterceptorAdapter implements Cmn {
 				ImagingStudy study = new ImagingStudy();
 				study.setPatient(new Reference(patientReferenceStr));
 
-				String s = dcmCodeMap.get(DCM_TAG_STUDY_UID).get(0);
+				String s = getFirstValue(dcmCodeMap, DCM_TAG_STUDY_UID);
 				if (isThere(s))
 					study.setUidElement(new OidType("urn:oid:" + s));
 
-				s = dcmCodeMap.get(DCM_TAG_ACCESSION).get(0);
+				s = getFirstValue(dcmCodeMap, DCM_TAG_ACCESSION);
 				if (isThere(s))
 					study.setAccession(new Identifier().setValue(s));
 
-				s = dcmCodeMap.get(DCM_TAG_STUDY_ID).get(0);
+				s = getFirstValue(dcmCodeMap, DCM_TAG_STUDY_ID);
 				if (isThere(s))
 					study.addIdentifier(new Identifier().setValue(s));
 
-				s = dcmCodeMap.get(DCM_TAG_INSTANCE_AVAILABILITY).get(0);
+				s = getFirstValue(dcmCodeMap, DCM_TAG_INSTANCE_AVAILABILITY);
 				if (isThere(s))
 					study.setAvailability(ImagingStudy.InstanceAvailability.fromCode(s));
 
 				List<String> sl = dcmCodeMap.get(DCM_TAG_MODALITIES);
-				for (String l : sl) {
-					if (isThere(l))
-						study.addModalityList(new Coding().setCode(l));
+				if (sl != null) {
+					for (String l : sl) {
+						if (isThere(l))
+							study.addModalityList(new Coding().setCode(l));
+					}
 				}
 
-				s = dcmCodeMap.get(DCM_TAG_REF_PHYS).get(0);
+				s = getFirstValue(dcmCodeMap, DCM_TAG_REF_PHYS);
 				if (isThere(s))
 					study.setReferrer(new Reference().setDisplay(s));
 
-				s = dcmCodeMap.get(DCM_TAG_RETRIEVE_URL).get(0);
+				s = getFirstValue(dcmCodeMap, DCM_TAG_RETRIEVE_URL);
 				if (isThere(s))
 					study.addEndpoint(new Reference().setReference(s));
 
-				s = dcmCodeMap.get(DCM_TAG_NUM_SERIES).get(0);
+				s = getFirstValue(dcmCodeMap, DCM_TAG_NUM_SERIES);
 				if (isThere(s))
 					study.setNumberOfSeries(Integer.parseInt(s));
 
-				s = dcmCodeMap.get(DCM_TAG_NUM_INSTANCES).get(0);
+				s = getFirstValue(dcmCodeMap, DCM_TAG_NUM_INSTANCES);
 				if (isThere(s))
 					study.setNumberOfInstances(Integer.parseInt(s));
 
-				String d = dcmCodeMap.get(DCM_TAG_STUDY_DATE).get(0);
-				String t = dcmCodeMap.get(DCM_TAG_STUDY_TIME).get(0);
+				String d = getFirstValue(dcmCodeMap, DCM_TAG_STUDY_DATE);
+				String t = getFirstValue(dcmCodeMap, DCM_TAG_STUDY_TIME);
 				if (isThere(t))
 				   t = t.substring(0, t.indexOf("."));
 				if (d.length() == 8) {
@@ -203,6 +205,12 @@ public class ImagingStudyInterceptor extends InterceptorAdapter implements Cmn {
 			String em = "Error processing image request " + e.getMessage() + " on command " + cmd;
 			throw new InternalErrorException(em, e);
 		}
+	}
+
+	private String getFirstValue(Map<String, List<String>> dcmCodeMap, String code) {
+		List<String> lst = dcmCodeMap.get(code);
+		if (lst != null && lst.isEmpty() == false) return lst.get(0);
+		return null;
 	}
 
 	private boolean isThere(String val) {
