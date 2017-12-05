@@ -75,7 +75,7 @@ run as follows:
 docker run \
    -e DEST_PACS="DCM4CHEE@10.252.175.44:11112" \
    -e IMAGE_SET="smart-1288992" \
-   nameTBD
+    rsna/load-images
 ```
 using information for your own test PACS archive and the name of the
 image set you want to load. The above environment values are the defaults.
@@ -136,7 +136,7 @@ docker run \
    -p DEVICE_PORT="11122" \
    -p LDAP_HOST="10.252.175.44" \
    -p LDAP_PORT="389" \
-   nameTBD
+   rsna/load-ldap
 ```
 
 ### Set up and run Matt Kelsey's test introspection service
