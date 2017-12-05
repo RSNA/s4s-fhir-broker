@@ -96,17 +96,8 @@ The "smart-1288992" data set image has these tags:
 - (0x0020,0x000d) StudyInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793
 - (0x0020,0x000e) SeriesInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793
 
-### Set up and run RSNA DICOM-RS Broker
-Clone the broker from github:
-```
-git clone https://github.com/RSNA/dcmrs-broker.git
-```
-From within the dcmrs-broker directory
-```
-docker build -t rsna/dcmrs-broker .
-```
-and then run the image
-```
+### Run RSNA DICOM-RS Broker
+
 docker run \
     -p 4567:4567 \
     -p 11122:11112 \
@@ -130,12 +121,12 @@ There is a docker image which will add an application entity to the
 LDAP server. Run it using:
 ```
 docker run \
-   -p AE_TITLE="PACS-SCP" \
-   -p DEVICE_NAME="BROKER-SCP" \
-   -p DEVICE_HOST="10.252.175.44" \
-   -p DEVICE_PORT="11122" \
-   -p LDAP_HOST="10.252.175.44" \
-   -p LDAP_PORT="389" \
+   -e AE_TITLE="PACS-SCP" \
+   -e DEVICE_NAME="BROKER-SCP" \
+   -e DEVICE_HOST="10.252.175.44" \
+   -e DEVICE_PORT="11122" \
+   -e LDAP_HOST="10.252.175.44" \
+   -e LDAP_PORT="389" \
    rsna/load-ldap
 ```
 
