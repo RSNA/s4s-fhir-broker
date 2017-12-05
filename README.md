@@ -3,8 +3,7 @@ The broker requires a WADO RS Image source and an
 introspection server for testing. You can provide these yourself,
 or use the test setups here:
 
-### Set up a dcm4chee based WADO RS Image source server for testing
-_(Skip this section if you have your own WADO RS Image source.)_
+### Set up a dcm4chee image archive for testing
 
 A dockerized dcm4chee is used for testing. Setting it up 
 involves three containers. I found that running each container
@@ -66,31 +65,7 @@ User: admin, pw: admin
 - Archive console http://localhost:9090/dcm4chee-arc/ui2
 - WADO-RS  Base URL: http://localhost:9090/dcm4chee-arc/aets/DCM4CHEE/rs
 
-You can use the Archive console to check your images and their tag
-values. It is not necessary to add Application Entry entries for C-STORE
-AE's, as the broker is set up to accept any value for the sending AE.
-
-You will need to add an Application Entities for the SCP which will be
-referenced by the dcmrs broker. To do this,
-
-1. Bring up the Archive console in a web browser, using the URL above.
-2. Click on the menu button in the upper right corner.
-
-![Server Tab](./hapi-fhir-jpaserver-example/docImgs/menuIcon.png?raw=true)
-
-3. From the menu, select "Configuration"
-
-![Server Tab](./hapi-fhir-jpaserver-example/docImgs/menu.png?raw=true)
-
-4. In the Configuration dialog, click on the AE list tab, then on the '+'
-icon to add the SCP. An example is shown.
-
-![Server Tab](./hapi-fhir-jpaserver-example/docImgs/scpAdd.png?raw=true)
-
 ### Load test images into dcm4chee server
-_(The instructions here show how to load test images into the dcm4chee
-test server. You will need to modify them if you are using your own WADO
-RS Image Source.)_
 
 There is a docker image which contains dicom test images which can be
 loaded into the test archive. At present it contains one set of images,
@@ -110,16 +85,16 @@ archive, not "localhost", even if that is the case.
 The "smart-1288992" data set image has these tags:
 
 - (0x0008,0x0016) SOP Class UID = 1.2.840.10008.5.1.4.1.1.1
-- (0x0008,0x0018) SOPInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.144065313879447963369902174642
+- (0x0008,0x0018) SOPInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793.1.1
 - (0x0008,0x0020) StudyDate = 20000101
 - (0x0008,0x0030) StudyTime = empty
 - (0x0008,0x0050) AccessionNumber = 2819497684894126
 - (0x0010,0x0030) PatientBirthDate = 19251223
-- (0x0010,0x0020) PatientID = 1288992
+- (0x0010,0x0020) PatientID = smart-1288992
 - (0x0012,0x0062) PatientIdentityRemoved = YES
 - (0x0010,0x0010) PatientName = Adams^Daniel
-- (0x0020,0x000d) StudyInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793094907821983261388534
-- (0x0020,0x000e) SeriesInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.210102868760281756294235082201
+- (0x0020,0x000d) StudyInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793
+- (0x0020,0x000e) SeriesInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793
 
 ### Set up and run RSNA DICOM-RS Broker
 Clone the broker from github:
@@ -150,8 +125,21 @@ However, it is important to use the actual IP address for the remote host.
 Do not use "localhost" or "127.0.0.1", even if the containers are on the
 same system.
 
+### Add the PACS SCP Application entity to the dcm4chee LDAP server
+There is a docker image which will add an application entity to the
+LDAP server. Run it using:
+```
+docker run \
+   -p AE_TITLE="PACS-SCP" \
+   -p DEVICE_NAME="BROKER-SCP" \
+   -p DEVICE_HOST="10.252.175.44" \
+   -p DEVICE_PORT="11122" \
+   -p LDAP_HOST="10.252.175.44" \
+   -p LDAP_PORT="389" \
+   nameTBD
+```
+
 ### Set up and run Matt Kelsey's test introspection service
-_(Skip this section if you are using your own introspection service.)_
 
 Clone the Introspection Service application from github:
 ```
@@ -205,11 +193,11 @@ I run the modified example server from Intellij on a tomcat server instance.
 My run configuration is:
 ##### Edit Configurations Dialog, Run Tab
 
-![Server Tab](./hapi-fhir-jpaserver-example/docImgs/runConfigServerTab.png?raw=true)
+![Server Tab](./readmeImgs/runConfigServerTab.png?raw=true)
 ##### Edit Configurations Dialog, Deployment Tab
-![Deployment Tab](./hapi-fhir-jpaserver-example/docImgs/runConfigDeploymentTab.png?raw=true)
+![Deployment Tab](./readmeImgs/runConfigDeploymentTab.png?raw=true)
 ##### and the Tomcat server dialog
-![Application Server Dialog](./hapi-fhir-jpaserver-example/docImgs/applicationServerDialog.png?raw=true)
+![Application Server Dialog](./readmeImgs/applicationServerDialog.png?raw=true)
 
 ### Testing the modifications to the example server
 
@@ -223,7 +211,7 @@ Authorization: Bearer authorizationTokenGoesHere
 
 GET Test WADO Study request (include Authorization header for authentication)
 ```
-http://localhost:8080/baseDstu3/studies/1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793094907821983261388534
+http://localhost:8080/baseDstu3/studies/1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793
 Authorization: Bearer authorizationTokenGoesHere
 ```
 
@@ -236,21 +224,20 @@ and, in the request body:
 ?token=authorizationTokenGoesHere$patient=smart-1288992
 ```
 ### How to generate an authentication token for testing
-_(This applies if you are using Matt Kelsey's introspection server.)_
 
 1. Navigate to https://tests.demo.syncfor.science
 
-![s4s-1](./hapi-fhir-jpaserver-example/docImgs/s4s-1.png?raw=true)
+![s4s-1](./readmeImgs/s4s-1.png?raw=true)
 
 2. Select Vendor: SMART
 3. Click on "Show more options"
 
-![s4s-1](./hapi-fhir-jpaserver-example/docImgs/s4s-2.png?raw=true)
+![s4s-1](./readmeImgs/s4s-2.png?raw=true)
 
 4. Next to "Tags", click on "None"
 5. then click on "patient-demographics"
 
-![s4s-1](./hapi-fhir-jpaserver-example/docImgs/s4s-3.png?raw=true)
+![s4s-1](./readmeImgs/s4s-3.png?raw=true)
 
 6. Click on the "Run tests" button.
 7. A "Tests complete!" dialog will display; click on its "x"
@@ -258,7 +245,7 @@ to dismiss it.
 8. On the right panel, click on "Feature: Patient demographics".
 A "Method URL" table with one row should appear.
 
-![s4s-1](./hapi-fhir-jpaserver-example/docImgs/s4s-4.png?raw=true)
+![s4s-1](./readmeImgs/s4s-4.png?raw=true)
 
 9. Click on the URL, which should read:
 ```
