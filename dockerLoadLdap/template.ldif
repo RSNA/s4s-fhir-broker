@@ -1,0 +1,40 @@
+# LDIF for adding a Device providing one Application Entity available on one Network connection
+# Adjust Base DN (dc=dcm4che,dc=org), Device name (DEVICE_NAME), AE Title (AE_TITLE),
+# Hostname (DEVICE_HOST) and Port number (DEVICE_PORT) before importing it into the LDAP server
+
+# Unique AE Title
+# (will fail if there is already an object for the same AE Title)
+dn: dicomAETitle=${AE_TITLE},cn=Unique AE Titles Registry,cn=DICOM Configuration,dc=dcm4che,dc=org
+objectClass: dicomUniqueAETitle
+dicomAETitle: ${AE_TITLE}
+
+# Device
+dn: dicomDeviceName=${DEVICE_NAME},cn=Devices,cn=DICOM Configuration,dc=dcm4che,dc=org
+objectClass: dicomDevice
+dicomDeviceName: ${DEVICE_NAME}
+dicomInstalled: TRUE
+
+# Network Connection
+dn: cn=dicom,dicomDeviceName=${DEVICE_NAME},cn=Devices,cn=DICOM Configuration,dc=dcm4che,dc=org
+objectClass: dicomNetworkConnection
+cn: dicom	
+dicomHostname: ${DEVICE_HOST}
+dicomPort: ${DEVICE_PORT}
+
+# Network Connection (secure)
+# dn: cn=dicom-tls,dicomDeviceName=${DEVICE_NAME},cn=Devices,cn=DICOM Configuration,dc=dcm4che,dc=org
+# cn: dicom-tls
+# objectClass: dicomNetworkConnection
+# dicomHostname: ${DEVICE_HOST}
+# dicomPort: ${DEVICE_PORT}
+# dicomTLSCipherSuite: TLS_RSA_WITH_AES_128_CBC_SHA
+# dicomTLSCipherSuite: SSL_RSA_WITH_3DES_EDE_CBC_SHA
+
+# Network Application Entity
+dn: dicomAETitle=${AE_TITLE},dicomDeviceName=${DEVICE_NAME},cn=Devices,cn=DICOM Configuration,dc=dcm4che,dc=org
+objectClass: dicomNetworkAE
+dicomAETitle: ${AE_TITLE}
+dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=${DEVICE_NAME},cn=Devices,cn=DICOM Configuration,dc=dcm4che,dc=org
+# dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=${DEVICE_NAME},cn=Devices,cn=DICOM Configuration,dc=dcm4che,dc=org
+dicomAssociationInitiator: FALSE
+dicomAssociationAcceptor: TRUE
