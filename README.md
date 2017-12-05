@@ -139,6 +139,7 @@ git clone https://github.com/kelseym/introspection-service.git
 From within the introspection-service directory, build and start the introspection service:
 ```
 docker-compose build
+
 docker-compose up
 ```
 You will now have an introspection endpoint available at: http://localhost:9004/api/introspect
