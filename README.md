@@ -203,13 +203,25 @@ Test ImageStudy query
 http://localhost:8080/baseDstu3/ImagingStudy?patient=smart-1288992
 Authorization: Bearer authorizationTokenGoesHere
 ```
+Here is one example using curl:
+```
+curl -H "Authorization: Bearer X3BreWfdBTWo4vwcQvxTF4pnHF6UPG" \
+     -H "Accept: application/json" \
+	  http://localhost:8080/baseDstu3/ImagingStudy?patient=smart-1288992
+```
 
 GET Test WADO Study request (include Authorization header for authentication)
 ```
 http://localhost:8080/baseDstu3/studies/1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793
 Authorization: Bearer authorizationTokenGoesHere
 ```
-
+Here is a curl example to retrieve the image data. Note the use of a log file to record the header response
+```
+curl -H "Authorization: Bearer X3BreWfdBTWo4vwcQvxTF4pnHF6UPG" \
+     -H "Accept: application/dicom" \
+     -D study-retrieve.log \
+	  http://localhost:8080/baseDstu3/studies/1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793
+```
 To Test introspection service directly
 ```
 POST http://localhost:9004/api/introspect
