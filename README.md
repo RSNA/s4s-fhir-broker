@@ -97,7 +97,7 @@ The "smart-1288992" data set image has these tags:
 - (0x0020,0x000e) SeriesInstanceUID = 1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793
 
 ### Run RSNA DICOM-RS Broker
-
+```
 docker run \
     -p 4567:4567 \
     -p 11122:11112 \
@@ -111,6 +111,8 @@ docker run \
     -e SCP_LOCAL_AE="PACS-SCP" \
     rsna/dcmrs-broker
 ```
+
+
 **Note:** The AE titles do not have to be set up in the dcm4che3e archive.
 However, it is important to use the actual IP address for the remote host.
 Do not use "localhost" or "127.0.0.1", even if the containers are on the
@@ -119,6 +121,7 @@ same system.
 ### Add the PACS SCP Application entity to the dcm4chee LDAP server
 There is a docker image which will add an application entity to the
 LDAP server. Run it using:
+
 ```
 docker run \
    -e AE_TITLE="PACS-SCP" \
