@@ -133,48 +133,21 @@ docker run \
    rsna/load-ldap
 ```
 
-### Set up and run Matt Kelsey's test introspection service
-
+### Run introspection service
+There is a docker image which will run the introspection service for
+testing. Run it using:
 Clone the Introspection Service application from github:
 ```
-git clone https://github.com/kelseym/introspection-service.git
+docker run \
+   -p 9004:9004 \
+   rsna/introspection-service
 ```
-From within the introspection-service directory, build and start the introspection service:
-```
-docker-compose build
+This brings up an introspection endpoint at: http://localhost:9004/api/introspect
+which handles tokens by requests to: https://portal.demo.syncfor.science/api/fhir.
 
-docker-compose up
-```
-You will now have an introspection endpoint available at: http://localhost:9004/api/introspect
-which will make request to:
-```
-https://portal.demo.syncfor.science/api/fhir
-```
-### Configuring the s4s FHIR Broker
-
-By default, the broker points to the test WADO RS source and instrospection
-servers described above. To point to different locations, edit the file
-hapi-fhir-jpaserver-example/utl.properties:
-```
-DICOM_RS_BROKER_QIDO_URL = http://localhost:4567/qido-rs
-DICOM_RS_BROKER_WADO_URL = http://localhost:4567/wado-rs
-INTROSPECTION_SERVICE_URL = http://localhost:9004/api/introspect
-```
-to provide the appropriate base URLs. These values may also be set using
-environment variables in the docker run command, as shown in the example
-below. values passed using environment variables override those in the
-utl.properties files.
-
-### run the test s4s FHIR Broker as a Docker Container
-
-To build the docker file, make hapi-fhir-jpaserver-example your current
-directory and run:
-```
-./build-docker-image.sh
-```
-this will create an image with the label "rsna/s4s-fhir-broker".
-
-To run the image, use (for example):
+### run the s4s FHIR Broker service
+There is a docker image which will run the S4S FHIR Broker service for
+testing. Run it using (for example):
 ```
 docker run -p 8080:8080 \
    -e DICOM_RS_BROKER_QIDO_URL="http://localhost:4567/qido-rs" \
@@ -182,25 +155,17 @@ docker run -p 8080:8080 \
    -e INTROSPECTION_SERVICE_URL="http://localhost:9004/api/introspect" \
    rsna/s4s-fhir-broker
 ```
+This brings up the FHIR broker service at: http://localhost:8080/baseDstu3.
+The environment variables point to the dicom rs broker and the
+instrospection service.
 
-### run the test s4s FHIR Broker from Intellij.
-I run the modified example server from Intellij on a tomcat server instance.
-My run configuration is:
-##### Edit Configurations Dialog, Run Tab
-
-![Server Tab](./readmeImgs/runConfigServerTab.png?raw=true)
-##### Edit Configurations Dialog, Deployment Tab
-![Deployment Tab](./readmeImgs/runConfigDeploymentTab.png?raw=true)
-##### and the Tomcat server dialog
-![Application Server Dialog](./readmeImgs/applicationServerDialog.png?raw=true)
-
-### Testing the modifications to the example server
+### Running tests
 
 Use the Restful client of your choice to run tests.
 
 Test ImageStudy query
 ```
-http://localhost:8080/baseDstu3/ImagingStudy?patient=smart-1288992
+GET http://localhost:8080/baseDstu3/ImagingStudy?patient=smart-1288992
 Authorization: Bearer authorizationTokenGoesHere
 ```
 Here is one example using curl:
@@ -212,7 +177,7 @@ curl -H "Authorization: Bearer X3BreWfdBTWo4vwcQvxTF4pnHF6UPG" \
 
 GET Test WADO Study request (include Authorization header for authentication)
 ```
-http://localhost:8080/baseDstu3/studies/1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793
+GET http://localhost:8080/baseDstu3/studies/1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793
 Authorization: Bearer authorizationTokenGoesHere
 ```
 Here is a curl example to retrieve the image data. Note the use of a log file to record the header response
