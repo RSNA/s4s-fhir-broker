@@ -119,19 +119,24 @@ Do not use "localhost" or "127.0.0.1", even if the containers are on the
 same system.
 
 ### Add the PACS SCP Application entity to the dcm4chee LDAP server
-There is a docker image which will add an application entity to the
-LDAP server. Run it using:
+A docker container which will add an application entity to the
+LDAP server is under development. In the meantime, you will need to add
+an Application Entity for the SCP which will be
+referenced by the dcmrs broker. To do this,
 
-```
-docker run \
-   -e AE_TITLE="PACS-SCP" \
-   -e DEVICE_NAME="BROKER-SCP" \
-   -e DEVICE_HOST="10.252.175.44" \
-   -e DEVICE_PORT="11122" \
-   -e LDAP_HOST="10.252.175.44" \
-   -e LDAP_PORT="389" \
-   rsna/load-ldap
-```
+1. Bring up the Archive console in a web browser, using the URL above.
+2. Click on the menu button in the upper right corner.
+
+![Server Tab](./readmeImgs/menuIcon.png?raw=true)
+
+3. From the menu, select "Configuration"
+
+![Server Tab](./readmeImgs/menu.png?raw=true)
+
+4. In the Configuration dialog, click on the AE list tab, then on the '+'
+icon to add the SCP. An example is shown.
+
+![Server Tab](./readmeImgs/scpAdd.png?raw=true)
 
 ### Run introspection service
 There is a docker image which will run the introspection service for

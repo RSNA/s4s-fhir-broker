@@ -1,3 +1,5 @@
+version: 1
+
 # LDIF for adding a Device providing one Application Entity available on one Network connection
 # Adjust Base DN (dc=dcm4che,dc=org), Device name (DEVICE_NAME), AE Title (AE_TITLE),
 # Hostname (DEVICE_HOST) and Port number (DEVICE_PORT) before importing it into the LDAP server
@@ -36,5 +38,5 @@ objectClass: dicomNetworkAE
 dicomAETitle: ${AE_TITLE}
 dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=${DEVICE_NAME},cn=Devices,cn=DICOM Configuration,dc=dcm4che,dc=org
 # dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=${DEVICE_NAME},cn=Devices,cn=DICOM Configuration,dc=dcm4che,dc=org
-dicomAssociationInitiator: FALSE
+dicomAssociationInitiator: TRUE
 dicomAssociationAcceptor: TRUE
