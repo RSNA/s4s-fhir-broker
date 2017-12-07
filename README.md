@@ -73,7 +73,7 @@ named "smart-1288992", which contains an anonymized Chest CR. It can be
 run as follows:
 ```
 docker run \
-   -e DEST_PACS="DCM4CHEE@10.252.175.44:11112" \
+   -e DEST_PACS="DCM4CHEE@<your host>:11112" \
    -e IMAGE_SET="smart-1288992" \
     rsna/load-images
 ```
@@ -102,11 +102,12 @@ docker run \
     -p 4567:4567 \
     -p 11122:11112 \
     -e QIDO_REMOTE_AE="DCM4CHEE" \
-    -e QIDO_REMOTE_HOST="10.252.175.44" \
+    -e QIDO_REMOTE_HOST="<your host>" \
     -e QIDO_REMOTE_PORT="11112" \
     -e QIDO_LOCAL_AE="QIDO-TESTING" \
     -e WAD0_REMOTE_AE="DCM4CHEE" \
-    -e WADO_REMOTE_HOST="10.252.175.44" \
+    -e WADO_REMOTE_HOST="<your host>" \
+    -e WADO_REMOTE_PORT="11112"  \
     -e WADO_LOCAL_AE="WADO-TESTING" \
     -e SCP_LOCAL_AE="PACS-SCP" \
     rsna/dcmrs-broker
@@ -119,24 +120,20 @@ Do not use "localhost" or "127.0.0.1", even if the containers are on the
 same system.
 
 ### Add the PACS SCP Application entity to the dcm4chee LDAP server
-A docker container which will add an application entity to the
-LDAP server is under development. In the meantime, you will need to add
-an Application Entity for the SCP which will be
-referenced by the dcmrs broker. To do this,
-
-1. Bring up the Archive console in a web browser, using the URL above.
-2. Click on the menu button in the upper right corner.
-
-![Server Tab](./readmeImgs/menuIcon.png?raw=true)
-
-3. From the menu, select "Configuration"
-
-![Server Tab](./readmeImgs/menu.png?raw=true)
-
-4. In the Configuration dialog, click on the AE list tab, then on the '+'
-icon to add the SCP. An example is shown.
-
-![Server Tab](./readmeImgs/scpAdd.png?raw=true)
+There is a docker image which will add an application entity to the
+LDAP server. Run it using:
+```
+docker run \
+   -e AE_TITLE="PACS-SCP" \
+   -e DEVICE_NAME="DCM-BROKER-SCP" \
+   -e DEVICE_HOST="<host SCP is on>" \
+   -e DEVICE_PORT="11122" \
+   -e LDAP_HOST="<ldap server host>" \
+   -e LDAP_PORT="389" \
+   rsna/load-ldap
+```
+**Note:** If you are using the dcm4chee archive console, you will have
+to reload (menu>Control>Reload), to see the change.
 
 ### Run introspection service
 There is a docker image which will run the introspection service for
@@ -145,6 +142,7 @@ Clone the Introspection Service application from github:
 ```
 docker run \
    -p 9004:9004 \
+   -e API_SERVER="https://portal.demo.syncfor.science/api/fhir" \
    rsna/introspection-service
 ```
 This brings up an introspection endpoint at: http://localhost:9004/api/introspect
@@ -162,7 +160,7 @@ docker run -p 8080:8080 \
 ```
 This brings up the FHIR broker service at: http://localhost:8080/baseDstu3.
 The environment variables point to the dicom rs broker and the
-instrospection service.
+introspection service.
 
 ### Running tests
 
@@ -206,20 +204,20 @@ and, in the request body:
 
 ![s4s-1](./readmeImgs/s4s-1.png?raw=true)
 
-2. Select Vendor: SMART
+2. Select Vendor: SMART-EHR-STU3
 3. Click on "Show more options"
 
 ![s4s-1](./readmeImgs/s4s-2.png?raw=true)
 
 4. Next to "Tags", click on "None"
-5. then click on "patient-demographics"
+5. then click on "patient-documents"
 
 ![s4s-1](./readmeImgs/s4s-3.png?raw=true)
 
 6. Click on the "Run tests" button.
 7. A "Tests complete!" dialog will display; click on its "x"
 to dismiss it.
-8. On the right panel, click on "Feature: Patient demographics".
+8. On the right panel, click on "Feature: Patient documents".
 A "Method URL" table with one row should appear.
 
 ![s4s-1](./readmeImgs/s4s-4.png?raw=true)
