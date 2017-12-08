@@ -258,6 +258,7 @@ public class Utl implements Cmn {
 		URL url = null;
 		try {
 			url = new URL(INTROSPECTION_SERVICE_URL);
+			System.out.println("*****" + url.toString() + "*****");
 			String postData = "token=" + authToken + "&patient=" + pid;
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			conn.setUseCaches(false);

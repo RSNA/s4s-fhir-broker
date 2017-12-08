@@ -141,9 +141,8 @@ testing. Run it using:
 Clone the Introspection Service application from github:
 ```
 docker run \
-   -p 9004:9004 \
-   -e API_SERVER="https://portal.demo.syncfor.science/api/fhir" \
-   rsna/introspection-service
+   -p 9004:5000 \
+   rsna/token-introspector
 ```
 This brings up an introspection endpoint at: http://localhost:9004/api/introspect
 which handles tokens by requests to: https://portal.demo.syncfor.science/api/fhir.
@@ -153,9 +152,9 @@ There is a docker image which will run the S4S FHIR Broker service for
 testing. Run it using (for example):
 ```
 docker run -p 8080:8080 \
-   -e DICOM_RS_BROKER_QIDO_URL="http://localhost:4567/qido-rs" \
-   -e DICOM_RS_BROKER_WADO_URL="http://localhost:4567/wado-rs" \
-   -e INTROSPECTION_SERVICE_URL="http://localhost:9004/api/introspect" \
+   -e DICOM_RS_BROKER_QIDO_URL="http://<dicomrs broker host>:4567/qido-rs" \
+   -e DICOM_RS_BROKER_WADO_URL="http://<dicomrs broker host>:4567/wado-rs" \
+   -e INTROSPECTION_SERVICE_URL="http://<introspection service host>:9004/api/introspect" \
    rsna/s4s-fhir-broker
 ```
 This brings up the FHIR broker service at: http://localhost:8080/baseDstu3.
@@ -186,7 +185,7 @@ Authorization: Bearer authorizationTokenGoesHere
 Here is a curl example to retrieve the image data. Note the use of a log file to record the header response
 ```
 curl -H "Authorization: Bearer X3BreWfdBTWo4vwcQvxTF4pnHF6UPG" \
-     -H "Accept: application/dicom" \
+     -H "Accept: multipart/related; type=\"application/dicom\"" \
      -D study-retrieve.log \
 	  http://localhost:8080/baseDstu3/studies/1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793
 ```
@@ -210,21 +209,21 @@ and, in the request body:
 ![s4s-1](./readmeImgs/s4s-2.png?raw=true)
 
 4. Next to "Tags", click on "None"
-5. then click on "patient-documents"
+5. then click on "patient-demographics"
 
 ![s4s-1](./readmeImgs/s4s-3.png?raw=true)
 
 6. Click on the "Run tests" button.
 7. A "Tests complete!" dialog will display; click on its "x"
 to dismiss it.
-8. On the right panel, click on "Feature: Patient documents".
-A "Method URL" table with one row should appear.
+8. On the right panel, click on "Feature: Patient demographics".
+A "Method URL" table with two http GET requests should appear.
 
 ![s4s-1](./readmeImgs/s4s-4.png?raw=true)
 
-9. Click on the URL, which should read:
+9. Click on the first URL, which should read:
 ```
-https://portal.demo.syncfor.science/api/fhir/Patient/smart-1288992
+https://portal-stu3.demo.syncfor.science/api/fhir/Patient/smart-1288992
 ```
 10. A new tab or window should open, showing an http Request and
 Response beginning:
