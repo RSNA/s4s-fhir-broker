@@ -152,9 +152,11 @@ There is a docker image which will run the S4S FHIR Broker service for
 testing. Run it using (for example):
 ```
 docker run -p 8080:8080 \
+   -v /var/local/s4sfhirbroker:/var/lib/jetty/data \
    -e DICOM_RS_BROKER_QIDO_URL="http://<dicomrs broker host>:4567/qido-rs" \
    -e DICOM_RS_BROKER_WADO_URL="http://<dicomrs broker host>:4567/wado-rs" \
    -e INTROSPECTION_SERVICE_URL="http://<introspection service host>:9004/api/introspect" \
+   -e IMAGE_ARCHIVE_WADO_RS_URL="http://localhost:9090/dcm4chee-arc/aets/DCM4CHEE/rs" \
    rsna/s4s-fhir-broker
 ```
 This brings up the FHIR broker service at: http://localhost:8080/baseDstu3.
@@ -189,6 +191,16 @@ curl -H "Authorization: Bearer X3BreWfdBTWo4vwcQvxTF4pnHF6UPG" \
      -D study-retrieve.log \
 	  http://localhost:8080/baseDstu3/studies/1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793
 ```
+**Notes:**
+1. When running tests, a successful ImageStudy query for a patient
+must be run before running study requests for studies for that patient,
+so that the fhir broker will 'known' the patient MRN. If this is not done
+the study request will result in an Authorization failure.
+2. Running a study request will result in an http 503 response code if
+the image(s) are not already in the cache - the archive will be loading
+them into the cache.. This is normal behavior. Rerun the request after
+the images have had time to load and it will should return the images.
+
 To Test introspection service directly
 ```
 POST http://localhost:9004/api/introspect

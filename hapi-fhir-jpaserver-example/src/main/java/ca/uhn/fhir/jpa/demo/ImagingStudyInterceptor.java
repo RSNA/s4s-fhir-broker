@@ -117,8 +117,11 @@ public class ImagingStudyInterceptor extends InterceptorAdapter implements Cmn {
 				study.setPatient(new Reference(patientReferenceStr));
 
 				String s = getFirstValue(dcmCodeMap, DCM_TAG_STUDY_UID);
-				if (isThere(s))
+				if (isThere(s)) {
 					study.setUidElement(new OidType("urn:oid:" + s));
+					String str = Utl.getArchiveURL() + "/studies/" + s;
+					study.addEndpoint(new Reference().setReference(str));
+				}
 
 				s = getFirstValue(dcmCodeMap, DCM_TAG_ACCESSION);
 				if (isThere(s))

@@ -23,6 +23,7 @@ public class Utl implements Cmn {
 	static String DICOM_RS_BROKER_QIDO_URL = "http://localhost:4567/qido-rs";
 	static String DICOM_RS_BROKER_WADO_URL = "http://localhost:4567/wado-rs";
 	static String INTROSPECTION_SERVICE_URL = "http://localhost:9004/api/introspect";
+	static String IMAGE_ARCHIVE_WADO_RS_URL = "http://localhost:9090/dcm4chee-arc/aets/DCM4CHEE/rs";
 
 	static {
 		String s = null;
@@ -37,6 +38,8 @@ public class Utl implements Cmn {
 			if (s != null) DICOM_RS_BROKER_WADO_URL = s;
 			s = StringUtils.trimToNull(properties.getProperty("INTROSPECTION_SERVICE_URL"));
 			if (s != null) INTROSPECTION_SERVICE_URL = s;
+			s = StringUtils.trimToNull(properties.getProperty("IMAGE_ARCHIVE_WADO_RS_URL"));
+			if (s != null) IMAGE_ARCHIVE_WADO_RS_URL = s;
 		} catch (Exception e) {
 			System.out.println("Missing/invalid utl.properties.");
 		}
@@ -47,6 +50,8 @@ public class Utl implements Cmn {
 			if (s != null) DICOM_RS_BROKER_WADO_URL = s;
 			s = StringUtils.trimToNull(System.getenv("INTROSPECTION_SERVICE_URL"));
 			if (s != null) INTROSPECTION_SERVICE_URL = s;
+			s = StringUtils.trimToNull(System.getenv("IMAGE_ARCHIVE_WADO_RS_URL"));
+			if (s != null) IMAGE_ARCHIVE_WADO_RS_URL = s;
 		} catch (SecurityException se) {
 			System.out.println("Security Exception accessing environment variables.");
 		}
@@ -58,6 +63,7 @@ public class Utl implements Cmn {
 	public static String getWadoURL() {
 		return DICOM_RS_BROKER_WADO_URL;
 	}
+	public static String getArchiveURL() { return IMAGE_ARCHIVE_WADO_RS_URL; }
 	private static Gson gson = new Gson();
 	private static FhirContext ctx = FhirContext.forDstu3();
 
@@ -67,7 +73,7 @@ public class Utl implements Cmn {
 	 * @return the MRN (first MRN for now)
 	 * @throws Exception on error, including patient not found.
     */
-	private static String getPatientMrn(Patient pat) throws Exception {
+	private static String getPatientMrn(String pid, Patient pat) throws Exception {
 
 		List<String> mrns = new ArrayList<String>();
 		nxtId: for (Identifier id : pat.getIdentifier()) {
@@ -85,6 +91,7 @@ public class Utl implements Cmn {
 			}
 		}
 		if (mrns.isEmpty()) return null;
+		PidLookup.put(pid, mrns.get(0));
 		return mrns.get(0);
 	}
 
@@ -248,6 +255,7 @@ public class Utl implements Cmn {
 	 * @param authToken authorization token
 	 * @param requestedResource resource, or "*"
 	 * @param requestedAccess "read", "write", or "*" for both.
+	 * @return patient MRN, or null;
 	 * @throws AuthenticationException unless token is valid for this patient and requested access.
 	 */
 	public static String validatePid(String pid, String authToken, String requestedResource, String requestedAccess)
@@ -302,7 +310,7 @@ public class Utl implements Cmn {
 			JsonObject patient = responseJson.getAsJsonObject("patient");
 			String patientstr = gson.toJson(patient);
 			Patient p = ctx.newJsonParser().parseResource(Patient.class, patientstr);
-			return getPatientMrn(p);
+			return getPatientMrn(pid, p);
 
 		} catch (MalformedURLException e ) {
 			throw new AuthenticationException(e.getMessage());
@@ -323,67 +331,11 @@ public class Utl implements Cmn {
 		throws AuthenticationException, Exception {
 		if (authToken == null || authToken.isEmpty()) throw new AuthenticationException("Authorization token missing");
 
-		// Query token instrospection service
-		URL url = null;
-		try {
-			url = new URL(INTROSPECTION_SERVICE_URL);
-			String postData = "token=" + authToken;
-			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			conn.setUseCaches(false);
-			conn.setDoInput(true);
-			conn.setDoOutput(true);
-			conn.setRequestMethod("POST");
-			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-			conn.setRequestProperty("Content-Length", "" + postData.getBytes().length);
-			conn.setRequestProperty("Content-Language", "en-US");
-			OutputStream os = conn.getOutputStream();
-			os.write(postData.getBytes("UTF-8"));
-			os.close();
-			conn.connect();
-
-			if (conn.getResponseCode() != 200) throw new AuthenticationException("Authorization failed");
-
-			Map<String, List<String>> responseHeaders = conn.getHeaderFields();
-			List<String> responseContentTypes = responseHeaders.get("Content-Type");
-			if (responseContentTypes == null)
-				throw new AuthenticationException("Required header missing, 'Content-Type'");
-			if (responseContentTypes.size() != 1)
-				throw new AuthenticationException("Required header invalid, 'Content-Type'");
-			String responseContentType = responseContentTypes.get(0);
-			if (responseContentType == null)
-				throw new AuthenticationException("Required header empty, 'Content-Type'");
-			if (responseContentType.contains("json") == false)
-				throw new AuthenticationException("Content-Type " + responseContentType + " not supported");
-
-			StringWriter writer = new StringWriter();
-			IOUtils.copy(conn.getInputStream(), writer, "UTF-8");
-			String responseBody = writer.toString();
-			if (responseBody == null || responseBody.isEmpty())
-				throw new AuthenticationException("Response body empty");
-
-			JsonObject responseJson = new JsonParser().parse(responseBody).getAsJsonObject();
-			Utl.is (responseJson, "active", "true");
-			String scope = Utl.is (responseJson, "scope", "*");
-			if (Utl.isScopeAuthorized(requestedResource, requestedAccess, scope) == false)
-				throw new AuthenticationException("Authorization failed");
-			// pull MRN out of identifier list
-			JsonObject patient = responseJson.getAsJsonObject("patient");
-			JsonArray entries = patient.getAsJsonArray("entry");
-			for (JsonElement entry : entries) {
-				JsonObject resource = entry.getAsJsonObject().getAsJsonObject("resource");
-				String patientstr = gson.toJson(resource);
-				Patient p = ctx.newJsonParser().parseResource(Patient.class, patientstr);
-				String patientmrn = getPatientMrn(p);
-				if (mrn.equals(patientmrn)) return p.getId();
-			}
-			throw new AuthenticationException("Access not authorized");
-
-		} catch (MalformedURLException e ) {
-			throw new AuthenticationException(e.getMessage());
-		} catch (IOException io) {
-			throw new AuthenticationException(io.getMessage());
-		}
-
+		String pid = StringUtils.trimToNull(PidLookup.get(mrn));
+		if (pid == null)
+			throw new AuthenticationException("unknown mrn: " + mrn);
+		validatePid(pid, authToken, requestedResource, requestedAccess);
+		return pid;
 	}
 
 	private static String get(JsonObject object, String name) {
