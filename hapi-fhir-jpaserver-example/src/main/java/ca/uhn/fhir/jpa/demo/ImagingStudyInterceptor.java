@@ -15,6 +15,8 @@ import com.google.gson.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.dstu3.model.*;
+import org.hl7.fhir.dstu3.model.codesystems.EndpointConnectionType;
+import org.hl7.fhir.dstu3.model.codesystems.EndpointConnectionTypeEnumFactory;
 
 
 import javax.servlet.http.HttpServletRequest;
@@ -120,7 +122,22 @@ public class ImagingStudyInterceptor extends InterceptorAdapter implements Cmn {
 				if (isThere(s)) {
 					study.setUidElement(new OidType("urn:oid:" + s));
 					String str = Utl.getArchiveURL() + "/studies/" + s;
-					study.addEndpoint(new Reference().setReference(str));
+					// contained Endpoint reference
+					Endpoint ce = new Endpoint();
+					ce.setId("wado-endpoint-id");
+					ce.setStatus(Endpoint.EndpointStatus.ACTIVE);
+					// connection type
+					Coding ect = new Coding();
+					ect.setSystem("http://hl7.org/fhir/endpoint-connection-type");
+					ect.setCode("dicom-wado-rs");
+					ce.setConnectionType(ect);
+					// payload type
+					CodeableConcept ept = new CodeableConcept();
+					ept.setText("DICOM WADO-RS");
+					ce.addPayloadType(ept);
+					ce.setAddress(str);
+					study.addContained(ce);
+					study.addEndpoint(new Reference().setReference("#wado-endpoint-id"));
 				}
 
 				s = getFirstValue(dcmCodeMap, DCM_TAG_ACCESSION);

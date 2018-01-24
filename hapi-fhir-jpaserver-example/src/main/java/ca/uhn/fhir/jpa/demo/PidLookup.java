@@ -17,8 +17,10 @@ import java.util.Set;
 import static java.nio.file.Files.getPosixFilePermissions;
 
 public class PidLookup {
-
+   // live url
 	private static final String dbURL = "jdbc:derby:directory:/var/lib/jetty/data/pidLookup;create=true";
+	// local testing url
+	// private static final String dbURL = "jdbc:derby:directory:data/pidLookup;create=true";
 	private static Connection connection = null;
 
 	static {

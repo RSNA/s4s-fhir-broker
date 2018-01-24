@@ -165,6 +165,8 @@ public class Utl implements Cmn {
 		StringWriter writer = new StringWriter();
 		IOUtils.copy(conn.getInputStream(), writer, "UTF-8");
 		String responseBody = StringUtils.trimToEmpty(writer.toString());
+		// cluge
+			if (responseBody.startsWith("[") && !responseBody.endsWith("]")) responseBody += "]";
 		if (responseBody.isEmpty())
 			throw new Exception("Response body empty");
 
