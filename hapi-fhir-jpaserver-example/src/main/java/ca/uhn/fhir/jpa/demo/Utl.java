@@ -145,6 +145,7 @@ public class Utl implements Cmn {
 
 		conn.setUseCaches(false);
 		conn.setDoInput(true);
+		System.out.println("**** " + cmd + " ****");
 		conn.connect();
 
 		int responseCode = conn.getResponseCode();
@@ -268,7 +269,7 @@ public class Utl implements Cmn {
 		URL url = null;
 		try {
 			url = new URL(INTROSPECTION_SERVICE_URL);
-			System.out.println("*****" + url.toString() + "*****");
+			System.out.println("***** " + url.toString() + " *****");
 			String postData = "token=" + authToken + "&patient=" + pid;
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			conn.setUseCaches(false);

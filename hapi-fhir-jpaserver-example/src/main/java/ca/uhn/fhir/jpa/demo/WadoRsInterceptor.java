@@ -116,6 +116,7 @@ public class WadoRsInterceptor extends InterceptorAdapter {
 			conn.setUseCaches(false);
 			conn.setDoInput(true);
 			conn.setDoOutput(hasoutbody);
+			System.out.println("**** " + cmd + " *****");
 			conn.connect();
 
 			final byte[] buffer = new byte[16384];
