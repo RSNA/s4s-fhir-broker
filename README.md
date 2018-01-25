@@ -19,7 +19,7 @@ docker run --name slapd \
    -v /etc/localtime:/etc/localtime \
    -v /var/local/dcm4chee-arc/ldap:/var/lib/ldap \
    -v /var/local/dcm4chee-arc/slapd.d:/etc/ldap/slapd.d \
-   -d dcm4che/slapd-dcm4chee:2.4.44-10.5
+   dcm4che/slapd-dcm4chee:2.4.44-10.5
 ```   
 2. dcm4che/postgres-dcm4chee
 
@@ -32,7 +32,7 @@ docker run --name postgres \
    -e POSTGRES_USER=pacs\
    -e POSTGRES_PASSWORD=pacs \
    -v /var/local/dcm4chee-arc/db:/var/lib/postgresql/data \
-   -d dcm4che/postgres-dcm4chee:9.6-10
+   dcm4che/postgres-dcm4chee:9.6-10
 ```   
 3. dcm4che/dcm4chee-arc-psql
 
@@ -110,6 +110,7 @@ docker run \
     -e WADO_REMOTE_PORT="11112"  \
     -e WADO_LOCAL_AE="WADO-TESTING" \
     -e SCP_LOCAL_AE="PACS-SCP" \
+    -e SCP_CACHE_DIR_PATH=/dcmrs-broker/cache \
     rsna/dcmrs-broker
 ```
 
@@ -142,7 +143,7 @@ Clone the Introspection Service application from github:
 ```
 docker run \
    -p 9004:5000 \
-   rsna/token-introspector
+   rsna/introspection-service
 ```
 This brings up an introspection endpoint at: http://localhost:9004/api/introspect
 which handles tokens by requests to: https://portal.demo.syncfor.science/api/fhir.
@@ -156,7 +157,7 @@ docker run -p 8080:8080 \
    -e DICOM_RS_BROKER_QIDO_URL="http://<dicomrs broker host>:4567/qido-rs" \
    -e DICOM_RS_BROKER_WADO_URL="http://<dicomrs broker host>:4567/wado-rs" \
    -e INTROSPECTION_SERVICE_URL="http://<introspection service host>:9004/api/introspect" \
-   -e IMAGE_ARCHIVE_WADO_RS_URL="http://localhost:9090/dcm4chee-arc/aets/DCM4CHEE/rs" \
+   -e IMAGE_ARCHIVE_WADO_RS_URL="http://<dcm4chee arc host>:9090/dcm4chee-arc/aets/DCM4CHEE/rs" \
    rsna/s4s-fhir-broker
 ```
 This brings up the FHIR broker service at: http://localhost:8080/baseDstu3.
@@ -198,7 +199,7 @@ so that the fhir broker will 'known' the patient MRN. If this is not done
 the study request will result in an Authorization failure.
 2. Running a study request will result in an http 503 response code if
 the image(s) are not already in the cache - the archive will be loading
-them into the cache.. This is normal behavior. Rerun the request after
+them into the cache. This is normal behavior. Rerun the request after
 the images have had time to load and it will should return the images.
 
 To Test introspection service directly
