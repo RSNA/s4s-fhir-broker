@@ -105,7 +105,7 @@ docker run \
     -e QIDO_REMOTE_HOST="<your host>" \
     -e QIDO_REMOTE_PORT="11112" \
     -e QIDO_LOCAL_AE="QIDO-TESTING" \
-    -e WAD0_REMOTE_AE="DCM4CHEE" \
+    -e WADO_REMOTE_AE="DCM4CHEE" \
     -e WADO_REMOTE_HOST="<your host>" \
     -e WADO_REMOTE_PORT="11112"  \
     -e WADO_LOCAL_AE="WADO-TESTING" \

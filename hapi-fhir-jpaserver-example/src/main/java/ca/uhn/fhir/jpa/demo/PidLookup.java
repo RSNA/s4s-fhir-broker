@@ -18,10 +18,13 @@ import static java.nio.file.Files.getPosixFilePermissions;
 
 public class PidLookup {
    // live url
-	private static final String dbURL = "jdbc:derby:directory:/var/lib/jetty/data/pidLookup;create=true";
+	// private static final String dbURL = "jdbc:derby:directory:/var/lib/jetty/data/pidLookup;create=true";
 	// local testing url
-	// private static final String dbURL = "jdbc:derby:directory:data/pidLookup;create=true";
+	private static final String dbURL = "jdbc:derby:directory:data/pidLookup;create=true";
 	private static Connection connection = null;
+	private static PreparedStatement insert = null;
+	private static PreparedStatement update = null;
+	private static PreparedStatement query = null;
 
 	static {
 		String create =
@@ -32,6 +35,9 @@ public class PidLookup {
 
 			try {
 				connection = DriverManager.getConnection(dbURL);
+				insert = connection.prepareStatement("INSERT INTO pid_lookup VALUES (?, ?)");
+				update = connection.prepareStatement("UPDATE pid_lookup SET pid_out = ? WHERE pid_in = ?");
+				query = connection.prepareStatement("SELECT * FROM pid_lookup WHERE pid_in = ?");
 				Statement stmt = connection.createStatement();
 				stmt.executeUpdate(create);
 				stmt.close();
@@ -45,36 +51,34 @@ public class PidLookup {
 		String s = PidLookup.get(pidIn);
 		if (s != null && s.equals(pidOut)) return;
 		// Insert if not there, update if there and not the same
-		if (s == null) {
-			s = "INSERT INTO pid_lookup VALUES ('" + pidIn + "', '" + pidOut + "')";
-		} else {
-			s = "UPDATE pid_lookup SET pid_out = '" + pidOut + "' WHERE pid_in = '" + pidIn + "'";
-		}
-		Statement stmt = null;
+		Integer i = null;
 		try {
-			stmt = connection.createStatement();
-			Integer i = stmt.executeUpdate(s);
+		if (s == null) {
+
+			// INSERT INTO pid_lookup VALUES (pidIn, pidOut)
+			insert.setString(1, pidIn);
+			insert.setString(2, pidOut);
+			i = insert.executeUpdate();
+		} else {
+			// UPDATE pid_lookup SET pid_out = pidOut WHERE pid_in = pidIn
+			update.setString(1, pidOut);
+			update.setString(2, pidIn);
+			i = update.executeUpdate();
+		}
 			String stl = "result was " + i.toString();
 		} catch (SQLException e) {
 
 			e.printStackTrace();
-		} finally {
-			try {
-				if (stmt != null) stmt.close();
-			} catch (SQLException se) {
-
-				se.printStackTrace();
-			}
 		}
 	}
 
 	public static String get(String pidIn) {
-		Statement stmt = null;
 		ResultSet result = null;
 		String pidOut = null;
 		try {
-			stmt = connection.createStatement();
-			result = stmt.executeQuery("SELECT * FROM pid_lookup WHERE pid_in = '" + pidIn + "'");
+			// SELECT * FROM pid_lookup WHERE pid_in = ?
+			query.setString(1, pidIn);
+			result = query.executeQuery();
 			if (result.next()) {
 				pidOut = result.getString("pid_out");
 			}
@@ -84,7 +88,6 @@ public class PidLookup {
 		} finally {
 			try {
 				if (result != null) result.close();
-				if (stmt != null) stmt.close();
 			} catch (SQLException se) {
 
 				se.printStackTrace();
