@@ -52,7 +52,7 @@ the changes I wanted to make in a file (mods):
 
 You need to have the dcm4chee archive running, which you can accomplish:
 
-1. By brining up the whole stack, or
+1. By bringing up the whole stack, or
 2. Just bringing up the archive, as described in the main readme for this
 project, in the section entitled, "Set up a dcm4chee image archive for
 testing".
@@ -74,6 +74,56 @@ will muck up the database. If you want to clear the database and start
 over, shut down the archive dockers, delete the directory
 "/var/local/dcm4chee-arc" on your host machine (root access will be
 required) and start the archive dockers again.
+
+### Suggested method to create studies for test purposes
+
+#### Assumes
+
+One or more DICOM files, downloaded from an ftp site or obtained using
+some other method outside the scope of this discussion. "input images".
+For example: image file 00001.dcm, 00002.dcm, and all images in directory
+/opt/ftp/test-set.
+
+dcm4che utilities installed on your system, specifically storescu.
+
+Access to your archive, specifically a Storage Service Class Provider
+(SCP), for example: DCM4CHEE@localhost:11112
+
+Appropriate patient demographic values for the patient you will be
+testing, for example:
+- AccessionNumber (0008,0050)  - 9812345
+- PatientAge (0010,1010)       -  66
+- PatientBirthDate (0010,0030) - 19510417
+- PatientID (0010,0020)        - smart-1288992
+- PatientName (0010,0010)      - Adams Pat
+- PatientSex (0010,0040)       - M
+
+An OID suffix for the study, series, and instance uids of the images,
+which should be selected to make these id's unique in your archive. For
+example:  "230113.17".
+
+#### Method
+
+Sample invocation of storescu on linux using data shown above:
+```
+storescu -c "DCM4CHEE@localhost:11112" \
+   -s "AccessionNumber=9812345" \
+   -s "PatientAge=66" \
+   -s "PatientBirthDate=19510417" \
+   -s "PatientID=smart-1288992" \
+   -s "PatientName=Adams Pat" \
+   -s "PatientSex=M" \
+   --uid-suffix "230113.17" \
+   00001.dcm 00002.dcm /opt/ftp/test-set
+```
+Notes: DICOM attributes may be referred to by keyword or tag value. Tag
+values are represented as 8 digit hex, without parentheses or comma.
+
+For additional documentation on storescu, type:
+```
+storescu -h
+```
+Windows storescu.bat file is located in bin directory.
 
 
 
