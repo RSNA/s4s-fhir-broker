@@ -79,10 +79,9 @@ required) and start the archive dockers again.
 
 #### Assumes
 
-One or more DICOM files, downloaded from an ftp site or obtained using
-some other method outside the scope of this discussion. "input images".
-For example: image file 00001.dcm, 00002.dcm, and all images in directory
-/opt/ftp/test-set.
+One or more DICOM files in a zip file on an ftp site for which you have
+a URL. For example:
+ftp://ftp.ihe.net/image_sharing/test-data/s4s-testing/IDS-DEPT003-a.zip
 
 dcm4che utilities installed on your system, specifically storescu.
 
@@ -104,20 +103,27 @@ example:  "230113.17".
 
 #### Method
 
-Sample invocation of storescu on linux using data shown above:
+Place the patient demographic values in a text file, one per line. For
+example (See modifications.txt in this directory):
 ```
-storescu -c "DCM4CHEE@localhost:11112" \
-   -s "AccessionNumber=9812345" \
-   -s "PatientAge=66" \
-   -s "PatientBirthDate=19510417" \
-   -s "PatientID=smart-1288992" \
-   -s "PatientName=Adams Pat" \
-   -s "PatientSex=M" \
-   --uid-suffix "230113.17" \
-   00001.dcm 00002.dcm /opt/ftp/test-set
+"AccessionNumber=7610982"
+"PatientAge=65"
+"PatientBirthDate=19520417"
+"PatientID=br-549"
+"PatientName=Granger^Farley"
+"PatientSex=M"
 ```
 Notes: DICOM attributes may be referred to by keyword or tag value. Tag
 values are represented as 8 digit hex, without parentheses or comma.
+
+Run the bash script createTestDataSet.sh (in this directory).
+For example:
+```
+createTestDataSet.sh \
+   ftp://ftp.ihe.net/image_sharing/test-data/s4s-testing/IDS-DEPT003-a.zip \
+   modifications.txt 230113.17 DCM4CHEE@10.252.175.44:11112
+```
+Note: There is additional documentation in the bash script itself.
 
 For additional documentation on storescu, type:
 ```
