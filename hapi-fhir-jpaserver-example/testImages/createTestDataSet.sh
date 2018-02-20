@@ -81,9 +81,9 @@ rm ${zipName}
 
 #------- find longest UID
 
-find . -type f -exec dcm_dump_file -t -Z {} \; | egrep "0020 000d|0020 000e|0008 0018" >> t
+find . -type f -exec dcmdump -w 125 {} \; | egrep "(0020,000D)|(0020,000E)|(0008,0018)" >> t
 
-longestUID=$(cut -d / -f 5 t | wc -L)
+longestUID=$(cut -d \[ -f 2 t | cut -d \] -f 1 | wc -L)
 
 maxUID=$((${longestUID} + ${#uidSuffix}))
 rm t
