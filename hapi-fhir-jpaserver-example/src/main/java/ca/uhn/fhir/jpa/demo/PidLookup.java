@@ -1,32 +1,15 @@
 package ca.uhn.fhir.jpa.demo;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.*;
-import java.util.Properties;
-import java.util.Set;
-
-import static java.nio.file.Files.getPosixFilePermissions;
 
 public class PidLookup {
-   // live url
-	private static final String dbURL = "jdbc:derby:directory:/var/lib/jetty/data/pidLookup;create=true";
-	// local testing url
-	// private static final String dbURL = "jdbc:derby:directory:data/pidLookup;create=true";
-	private static Connection connection = null;
+	private static Connection conn = null;
 	private static PreparedStatement insert = null;
 	private static PreparedStatement update = null;
 	private static PreparedStatement query = null;
 
 	static {
+
 		String create =
 		"CREATE TABLE pid_lookup ( " +
 			"pid_in  varchar(255) NOT NULL, " +
@@ -34,17 +17,17 @@ public class PidLookup {
 			"PRIMARY KEY (pid_in))";
 
 			try {
-				connection = DriverManager.getConnection(dbURL);
-				insert = connection.prepareStatement("INSERT INTO pid_lookup VALUES (?, ?)");
-				update = connection.prepareStatement("UPDATE pid_lookup SET pid_out = ? WHERE pid_in = ?");
-				query = connection.prepareStatement("SELECT * FROM pid_lookup WHERE pid_in = ?");
-				Statement stmt = connection.createStatement();
+				conn = DriverManager.getConnection(Utl.getPidLookupDbURL());
+				insert = conn.prepareStatement("INSERT INTO pid_lookup VALUES (?, ?)");
+				update = conn.prepareStatement("UPDATE pid_lookup SET pid_out = ? WHERE pid_in = ?");
+				query = conn.prepareStatement("SELECT * FROM pid_lookup WHERE pid_in = ?");
+				Statement stmt = conn.createStatement();
 				stmt.executeUpdate(create);
 				stmt.close();
 			} catch (SQLException e ) {
 				e.printStackTrace();
 			}
-		}
+	}
 
 	public static void put(String pidIn, String pidOut) {
 		// In testing environment, the relationship will often already be there.

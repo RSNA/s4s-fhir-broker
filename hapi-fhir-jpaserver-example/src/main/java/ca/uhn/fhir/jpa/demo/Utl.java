@@ -1,6 +1,7 @@
 package ca.uhn.fhir.jpa.demo;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import com.google.gson.*;
@@ -24,6 +25,10 @@ public class Utl implements Cmn {
 	static String DICOM_RS_BROKER_WADO_URL = "http://localhost:4567/wado-rs";
 	static String INTROSPECTION_SERVICE_URL = "http://localhost:9004/api/introspect";
 	static String IMAGE_ARCHIVE_WADO_RS_URL = "http://localhost:9090/dcm4chee-arc/aets/DCM4CHEE/rs";
+	static String PID_LOOKUP_DB_URL = "jdbc:derby:directory:data/pidLookup;create=true";
+	static String DIAGNOSTIC_REPORT_DB_URL = "jdbc:postgresql://localhost:5433/rsnadb";
+	static String DIAGNOSTIC_REPORT_PERFORMER_REFERENCE = "Organization/57";
+	static String DIAGNOSTIC_REPORT_CODE_STRING = "http://loinc.org|37815-8|CR";
 
 	static {
 		String s = null;
@@ -40,6 +45,14 @@ public class Utl implements Cmn {
 			if (s != null) INTROSPECTION_SERVICE_URL = s;
 			s = StringUtils.trimToNull(properties.getProperty("IMAGE_ARCHIVE_WADO_RS_URL"));
 			if (s != null) IMAGE_ARCHIVE_WADO_RS_URL = s;
+			s = StringUtils.trimToNull(properties.getProperty("PID_LOOKUP_DB_URL"));
+			if (s != null) PID_LOOKUP_DB_URL = s;
+			s = StringUtils.trimToNull(properties.getProperty("DIAGNOSTIC_REPORT_DB_URL"));
+			if (s != null) DIAGNOSTIC_REPORT_DB_URL = s;
+			s = StringUtils.trimToNull(properties.getProperty("DIAGNOSTIC_REPORT_PERFORMER_REFERENCE"));
+			if (s != null) DIAGNOSTIC_REPORT_PERFORMER_REFERENCE = s;
+			s = StringUtils.trimToNull(properties.getProperty("DIAGNOSTIC_REPORT_CODE_STRING"));
+			if (s != null) DIAGNOSTIC_REPORT_CODE_STRING = s;
 		} catch (Exception e) {
 			System.out.println("Missing/invalid utl.properties.");
 		}
@@ -52,6 +65,14 @@ public class Utl implements Cmn {
 			if (s != null) INTROSPECTION_SERVICE_URL = s;
 			s = StringUtils.trimToNull(System.getenv("IMAGE_ARCHIVE_WADO_RS_URL"));
 			if (s != null) IMAGE_ARCHIVE_WADO_RS_URL = s;
+			s = StringUtils.trimToNull(System.getenv("PID_LOOKUP_DB_URL"));
+			if (s != null) PID_LOOKUP_DB_URL = s;
+			s = StringUtils.trimToNull(System.getenv("DIAGNOSTIC_REPORT_DB_URL"));
+			if (s != null) DIAGNOSTIC_REPORT_DB_URL = s;
+			s = StringUtils.trimToNull(System.getenv("DIAGNOSTIC_REPORT_PERFORMER_REFERENCE"));
+			if (s != null) DIAGNOSTIC_REPORT_PERFORMER_REFERENCE = s;
+			s = StringUtils.trimToNull(System.getenv("DIAGNOSTIC_REPORT_CODE_STRING"));
+			if (s != null) DIAGNOSTIC_REPORT_CODE_STRING = s;
 		} catch (SecurityException se) {
 			System.out.println("Security Exception accessing environment variables.");
 		}
@@ -64,6 +85,21 @@ public class Utl implements Cmn {
 		return DICOM_RS_BROKER_WADO_URL;
 	}
 	public static String getArchiveURL() { return IMAGE_ARCHIVE_WADO_RS_URL; }
+	public static String getPidLookupDbURL() { return PID_LOOKUP_DB_URL; }
+	public static String getDiagnosticReportDbURL() { return DIAGNOSTIC_REPORT_DB_URL; }
+	public static String getDiagnosticReportPerformerReference() { return DIAGNOSTIC_REPORT_PERFORMER_REFERENCE; }
+	public static String getDiagnosticReportCodeSystem() {
+		String[] tokens = DIAGNOSTIC_REPORT_CODE_STRING.split("[|]+");
+		return tokens[0];
+	}
+	public static String getDiagnosticReportCodeCode() {
+		String[] tokens = DIAGNOSTIC_REPORT_CODE_STRING.split("[|]+");
+		return tokens[1];
+	}
+	public static String getDiagnosticReportCodeText() {
+		String[] tokens = DIAGNOSTIC_REPORT_CODE_STRING.split("[|]+");
+		return tokens[2];
+	}
 	private static Gson gson = new Gson();
 	private static FhirContext ctx = FhirContext.forDstu3();
 

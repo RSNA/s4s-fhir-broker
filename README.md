@@ -148,6 +148,19 @@ docker run \
 This brings up an introspection endpoint at: http://localhost:9004/api/introspect
 which handles tokens by requests to: https://portal.demo.syncfor.science/api/fhir.
 
+### run the S4S RSNA Edge server test database
+There is a docker image which will run the S4S RSNA Edge server test database
+testing. Run it using (for example):
+```
+docker run --name rsnadb \
+   -p 5433:5432 \
+   -v /etc/localtime:/etc/localtime \
+   -e POSTGRES_DB=rsnadb \
+   -e POSTGRES_USER=edge \
+   -e POSTGRES_PASSWORD=psword \
+   rsna/s4s-edgeserverdb
+```
+
 ### run the s4s FHIR Broker service
 There is a docker image which will run the S4S FHIR Broker service for
 testing. Run it using (for example):
@@ -158,6 +171,9 @@ docker run -p 8080:8080 \
    -e DICOM_RS_BROKER_WADO_URL="http://<dicomrs broker host>:4567/wado-rs" \
    -e INTROSPECTION_SERVICE_URL="http://<introspection service host>:9004/api/introspect" \
    -e IMAGE_ARCHIVE_WADO_RS_URL="http://<dcm4chee arc host>:9090/dcm4chee-arc/aets/DCM4CHEE/rs" \
+   -e PID_LOOKUP_DB_URL="jdbc:derby:directory:/var/lib/jetty/data/pidLookup;create=true" \
+   -e DIAGNOSTIC_REPORT_DB_URL="jdbc:postgresql://localhost:5433/rsnadb" \
+   -e DIAGNOSTIC_REPORT_PERFORMER_REFERENCE="Organization/57 \
    rsna/s4s-fhir-broker
 ```
 This brings up the FHIR broker service at: http://localhost:8080/baseDstu3.
@@ -192,6 +208,24 @@ curl -H "Authorization: Bearer X3BreWfdBTWo4vwcQvxTF4pnHF6UPG" \
      -D study-retrieve.log \
 	  http://localhost:8080/baseDstu3/studies/1.3.6.1.4.1.14519.5.2.1.6279.6001.270617793
 ```
+
+Test DiagnosticReport query
+```
+GET http://localhost:8080/baseDstu3/DiagnosticReport?patient=smart-1288992
+Accept-Charset: utf-8
+Accept-Encoding: deflate, sdch
+Accept: Application/json
+Authorization: Bearer X3BreWfdBTWo4vwcQvxTF4pnHF6UPG
+```
+Here is a curl example to retrieve diagnostic report resource(s).
+```
+curl -H "Accept-Charset: utf-8" \
+     -H "Accept-Encoding: deflate, sdch" \
+     -H "Accept: Application/json" \
+     -H "Authorization: Bearer X3BreWfdBTWo4vwcQvxTF4pnHF6UPG" \
+     http://localhost:8080/baseDstu3/DiagnosticReport?patient=smart-1288992
+```
+
 **Notes:**
 1. When running tests, a successful ImageStudy query for a patient
 must be run before running study requests for studies for that patient,

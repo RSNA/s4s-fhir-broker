@@ -258,7 +258,7 @@ public class ImagingStudyInterceptor extends InterceptorAdapter implements Cmn {
 			throw new AuthenticationException("Invalid Authorization token type");
 		String authToken = StringUtils.trimToEmpty(authTokenType.substring(6));
 
-		return Utl.validatePid(pid, authToken, "ImageStudy", "read");
+		return Utl.validatePid(pid, authToken, "DiagnosticReport", "read");
 
 	}
 }

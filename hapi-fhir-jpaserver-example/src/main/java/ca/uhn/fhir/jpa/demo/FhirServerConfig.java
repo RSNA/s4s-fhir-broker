@@ -125,6 +125,12 @@ public class FhirServerConfig extends BaseJavaConfigDstu3 {
 		return retVal;
 	}
 
+	@Bean(autowire = Autowire.BY_TYPE)
+	public IServerInterceptor diagnosticReportInterceptor() {
+		DiagnosticReportInterceptor retVal = new DiagnosticReportInterceptor();
+		return retVal;
+	}
+
 	@Bean()
 	public JpaTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
 		JpaTransactionManager retVal = new JpaTransactionManager();
