@@ -1,4 +1,4 @@
-### Suggested method to create studies for test purposes
+### Suggested method to create a study for test purposes
 
 #### Assumes
 
@@ -53,6 +53,59 @@ For additional documentation on storescu, type:
 storescu -h
 ```
 Windows storescu.bat file is located in bin directory.
+
+### Suggested method to create multiple studies for test purposes
+
+This method builds on the method for creating a single test study.
+
+#### Assumes
+
+Several .zip files in the ftp directory, each with one study's images.
+
+Needed demographics and a UID suffix for each study, as above.
+
+Access to your archive, as above.
+
+#### Method
+
+Create a text file corresponding to each zip file, with the same name as
+the zip file, but with a file type extension of .mod. Place all of these
+files in a directory, for example "workinDirectory/mod". In each file,
+place the patient demographic values, as above, adding an additional
+line in the file for the UID Suffix. For example:
+```
+"Suffix=.0.12"
+"AccessionNumber=7610982"
+"PatientAge=65"
+"PatientBirthDate=19520417"
+"PatientID=br-549"
+"PatientName=Granger^Farley"
+"PatientSex=M"
+```
+Run the script createDataSets.sh (in this directory). For example:
+```
+createTestDataSets.sh \
+   ftp://ftp.ihe.net/image_sharing/test-data/s4s-testing \
+   modifications.txt 230113.17 DCM4CHEE@10.252.175.44:11112
+```
+Parameters:
+1. URL of the directory containing zip files of images.
+2. Directory containing the modification files, must match up to ftp .zip files
+3. Target SCP AE_TITLE@host:port
+4. Directory to use for temporary work, default "tmp".
+Notes:
+- mod and tmp directories are absolute or relative to current working
+directory.
+- Zip files containing images with UIDs longer than 64 characters,
+including the Suffix, will not be processed.
+
+
+
+
+
+
+
+
 
 
 
