@@ -11,22 +11,25 @@ public class PidLookup {
 	static {
 
 		String create =
-		"CREATE TABLE pid_lookup ( " +
-			"pid_in  varchar(255) NOT NULL, " +
-			"pid_out varchar(255) NOT NULL, " +
-			"PRIMARY KEY (pid_in))";
+			"CREATE TABLE pid_lookup ( " +
+				"pid_in  varchar(255) NOT NULL, " +
+				"pid_out varchar(255) NOT NULL, " +
+				"PRIMARY KEY (pid_in))";
 
-			try {
-				conn = DriverManager.getConnection(Utl.getPidLookupDbURL());
-				insert = conn.prepareStatement("INSERT INTO pid_lookup VALUES (?, ?)");
-				update = conn.prepareStatement("UPDATE pid_lookup SET pid_out = ? WHERE pid_in = ?");
-				query = conn.prepareStatement("SELECT * FROM pid_lookup WHERE pid_in = ?");
-				Statement stmt = conn.createStatement();
-				stmt.executeUpdate(create);
-				stmt.close();
-			} catch (SQLException e ) {
-				e.printStackTrace();
-			}
+		try {
+			conn = DriverManager.getConnection(Utl.getPidLookupDbURL());
+			Statement stmt = conn.createStatement();
+			stmt.executeUpdate(create);
+			stmt.close();
+		} catch (SQLException e) {
+		}
+		try {
+			insert = conn.prepareStatement("INSERT INTO pid_lookup VALUES (?, ?)");
+			update = conn.prepareStatement("UPDATE pid_lookup SET pid_out = ? WHERE pid_in = ?");
+			query = conn.prepareStatement("SELECT * FROM pid_lookup WHERE pid_in = ?");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void put(String pidIn, String pidOut) {

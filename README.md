@@ -166,14 +166,13 @@ There is a docker image which will run the S4S FHIR Broker service for
 testing. Run it using (for example):
 ```
 docker run -p 8080:8080 \
-   -v /var/local/s4sfhirbroker:/var/lib/jetty/data \
    -e DICOM_RS_BROKER_QIDO_URL="http://<dicomrs broker host>:4567/qido-rs" \
    -e DICOM_RS_BROKER_WADO_URL="http://<dicomrs broker host>:4567/wado-rs" \
    -e INTROSPECTION_SERVICE_URL="http://<introspection service host>:9004/api/introspect" \
    -e IMAGE_ARCHIVE_WADO_RS_URL="http://<dcm4chee arc host>:9090/dcm4chee-arc/aets/DCM4CHEE/rs" \
-   -e PID_LOOKUP_DB_URL="jdbc:derby:directory:/var/lib/jetty/data/pidLookup;create=true" \
+   -e PID_LOOKUP_DB_URL="jdbc:derby:directory:/data/pidLookup;create=true" \
    -e DIAGNOSTIC_REPORT_DB_URL="jdbc:postgresql://localhost:5433/rsnadb" \
-   -e DIAGNOSTIC_REPORT_PERFORMER_REFERENCE="Organization/57 \
+   -e DIAGNOSTIC_REPORT_PERFORMER_REFERENCE="Organization/57" \
    rsna/s4s-fhir-broker
 ```
 This brings up the FHIR broker service at: http://localhost:8080/baseDstu3.

@@ -25,7 +25,7 @@ public class Utl implements Cmn {
 	static String DICOM_RS_BROKER_WADO_URL = "http://localhost:4567/wado-rs";
 	static String INTROSPECTION_SERVICE_URL = "http://localhost:9004/api/introspect";
 	static String IMAGE_ARCHIVE_WADO_RS_URL = "http://localhost:9090/dcm4chee-arc/aets/DCM4CHEE/rs";
-	static String PID_LOOKUP_DB_URL = "jdbc:derby:directory:data/pidLookup;create=true";
+	static String PID_LOOKUP_DB_URL = "jdbc:derby:directory:/data/pidLookup;create=true";
 	static String DIAGNOSTIC_REPORT_DB_URL = "jdbc:postgresql://localhost:5433/rsnadb";
 	static String DIAGNOSTIC_REPORT_PERFORMER_REFERENCE = "Organization/57";
 	static String DIAGNOSTIC_REPORT_CODE_STRING = "http://loinc.org|37815-8|CR";
