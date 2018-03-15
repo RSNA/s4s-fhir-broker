@@ -26,17 +26,24 @@ public class DiagnosticReportInterceptor extends InterceptorAdapter {
 	private static PreparedStatement queryPidOnly = null;
 	private static PreparedStatement queryPidDate = null;
 
-	static {
-		try {
-			Class.forName("org.postgresql.Driver");
-			conn = DriverManager.getConnection(Utl.getDiagnosticReportDbURL(), "edge", "psword" );
-			queryPidOnly = conn.prepareStatement("SELECT * FROM v_exam_status WHERE mrn = ?");
-			queryPidDate = conn.prepareStatement("SELECT * FROM v_exam_status WHERE mrn = ? AND status_timestamp >= ?");
-
-		} catch (SQLException e ) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+	private void connectToEdge() {
+		if(conn != null) {
+			try {
+				System.out.println("\n\n### Connecting to EdgeServer #####");
+				Class.forName("org.postgresql.Driver");
+				conn = DriverManager.getConnection(Utl.getDiagnosticReportDbURL(), "edge", "psword");
+				queryPidOnly = conn.prepareStatement("SELECT * FROM v_exam_status WHERE mrn = ?");
+				queryPidDate = conn.prepareStatement("SELECT * FROM v_exam_status WHERE mrn = ? AND status_timestamp >= ?");
+				System.out.println("queryPidOnly: " + queryPidOnly);
+				System.out.println("queryPidDate: " + queryPidDate);
+				System.out.println("### Success #####\n");
+			} catch (Throwable e) {
+				System.out.println("\n\n## Failed ##\n\n");
+				System.out.println(Utl.getDiagnosticReportDbURL());
+				System.out.println(e.getMessage());
+				e.printStackTrace();
+				System.out.println("\n\n####\n\n");
+			}
 		}
 	}
 
@@ -46,6 +53,7 @@ public class DiagnosticReportInterceptor extends InterceptorAdapter {
 	public boolean incomingRequestPostProcessed(RequestDetails theRequestDetails,
 															  HttpServletRequest theRequest, HttpServletResponse theResponse)
 		throws AuthenticationException {
+		connectToEdge();
 
 		try {
 
@@ -215,7 +223,7 @@ public class DiagnosticReportInterceptor extends InterceptorAdapter {
 	private String authenticate(RequestDetails theRequestDetails,
 										 HttpServletRequest theRequest, HttpServletResponse theResponse)
 		throws AuthenticationException, InvalidRequestException, Exception {
-
+		connectToEdge();
 
 		// Get, validate pid parameter
 		Map<String, String[]> requestParameters = theRequestDetails.getParameters();
