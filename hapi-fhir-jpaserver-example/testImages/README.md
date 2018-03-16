@@ -1,12 +1,14 @@
-### Suggested method to create a study for test purposes
+### Suggested method to create studies for test purposes
 
 #### Assumes
 
-One or more DICOM files in a zip file on an ftp site for which you have
-a URL. For example:
-ftp://ftp.ihe.net/image_sharing/test-data/s4s-testing/IDS-DEPT003-a.zip
+You have unzipped the createTestDataSets.zip file into a directory of
+your choice which has enough free space to hold several copies of the
+largest study you are going to process.
 
-dcm4che utilities installed on your system, specifically storescu.
+One or more DICOM studies in zip files on an ftp site for which you have
+a URL. For example:
+ftp://ftp.ihe.net/image_sharing/test-data/s4s-testing
 
 Access to your archive, specifically a Storage Service Class Provider
 (SCP), for example: DCM4CHEE@localhost:11112
@@ -20,85 +22,47 @@ testing, for example:
 - PatientName (0010,0010)      - Adams Pat
 - PatientSex (0010,0040)       - M
 
-An OID suffix for the study, series, and instance uids of the images,
-which should be selected to make these id's unique in your archive. For
-example:  "230113.17".
-
 #### Method
 
-Place the patient demographic values in a text file, one per line. For
-example (See modifications.txt in this directory):
+Place the patient demographic values for each study (in a file with the
+file extension ".mod" located in the mod subdirectory) with one Tag and
+its value per line. For example (See .mod files in the mod subdirectory):
 ```
-"AccessionNumber=7610982"
-"PatientAge=65"
-"PatientBirthDate=19520417"
-"PatientID=br-549"
-"PatientName=Granger^Farley"
-"PatientSex=M"
+uidBase=1.2.143542
+AccessionNumber=7610982
+PatientAge=65
+PatientBirthDate=19520417
+PatientID=br-549
+PatientName=Granger^Farley
+PatientSex=M
 ```
-Notes: DICOM attributes may be referred to by keyword or tag value. Tag
+Notes:
+1. DICOM attributes may be referred to by keyword or tag value. Tag
 values are represented as 8 digit hex, without parentheses or comma.
+2. The name of the .mod file must be the same as the corresponding .zip
+file in the ftp site directory, including spaces.
+3. The additional tag "uidBase" may be added with a UID base string for
+the study. If you do not include this parameter, one will be created by
+the script.
+4. The existing .mod files in the mod subdirectory assume that you are
+generating test data from the ftp site given above. If you are, simply
+modify these files to contain the tag values you wish. If you are not
+using the ftp site above, delete these .mod files from the mod
+subdirectory before running the script.
 
 Run the bash script createTestDataSet.sh (in this directory).
 For example:
 ```
 createTestDataSet.sh \
    ftp://ftp.ihe.net/image_sharing/test-data/s4s-testing/IDS-DEPT003-a.zip \
-   modifications.txt 230113.17 DCM4CHEE@10.252.175.44:11112
+   DCM4CHEE@10.252.175.44:11112
 ```
-Note: There is additional documentation in the bash script itself.
-
-For additional documentation on storescu, type:
-```
-storescu -h
-```
-Windows storescu.bat file is located in bin directory.
-
-### Suggested method to create multiple studies for test purposes
-
-This method builds on the method for creating a single test study.
-
-#### Assumes
-
-Several .zip files in the ftp directory, each with one study's images.
-
-Needed demographics and a UID suffix for each study, as above.
-
-Access to your archive, as above.
-
-#### Method
-
-Create a text file corresponding to each zip file, with the same name as
-the zip file, but with a file type extension of .mod. Place all of these
-files in a directory, for example "workinDirectory/mod". In each file,
-place the patient demographic values, as above, adding an additional
-line in the file for the UID Suffix. For example:
-```
-"Suffix=.0.12"
-"AccessionNumber=7610982"
-"PatientAge=65"
-"PatientBirthDate=19520417"
-"PatientID=br-549"
-"PatientName=Granger^Farley"
-"PatientSex=M"
-```
-Run the script createDataSets.sh (in this directory). For example:
-```
-createTestDataSets.sh \
-   ftp://ftp.ihe.net/image_sharing/test-data/s4s-testing \
-   modifications.txt 230113.17 DCM4CHEE@10.252.175.44:11112
-```
-Parameters:
-1. URL of the directory containing zip files of images.
-2. Directory containing the modification files, must match up to ftp .zip files
-3. Target SCP AE_TITLE@host:port
-4. Directory to use for temporary work, default "tmp".
 Notes:
-- mod and tmp directories are absolute or relative to current working
-directory.
-- Zip files containing images with UIDs longer than 64 characters,
-including the Suffix, will not be processed.
-
+1. There is additional documentation in the bash script itself.
+2. The script will look for a zip file on the ftp site for each .mod
+file in the mod subdirectory, download and unzip the file, process each
+image file found, updating the demographic values and generating new
+UIDs, and finally send the updated files to the archive.
 
 
 
