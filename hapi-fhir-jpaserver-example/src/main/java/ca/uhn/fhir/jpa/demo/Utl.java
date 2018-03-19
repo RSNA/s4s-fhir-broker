@@ -1,14 +1,14 @@
 package ca.uhn.fhir.jpa.demo;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.parser.DataFormatException;
-import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import com.google.gson.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.auth.AUTH;
-import org.hl7.fhir.dstu3.model.*;
+import org.hl7.fhir.dstu3.model.CodeableConcept;
+import org.hl7.fhir.dstu3.model.Coding;
+import org.hl7.fhir.dstu3.model.Identifier;
+import org.hl7.fhir.dstu3.model.Patient;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,6 +76,18 @@ public class Utl implements Cmn {
 		} catch (SecurityException se) {
 			System.out.println("Security Exception accessing environment variables.");
 		}
+
+		// Strip double quotes //
+		DICOM_RS_BROKER_QIDO_URL 					= DICOM_RS_BROKER_QIDO_URL.replace("\"", "");
+		DICOM_RS_BROKER_WADO_URL 					= DICOM_RS_BROKER_WADO_URL.replace("\"", "");
+		INTROSPECTION_SERVICE_URL 					= INTROSPECTION_SERVICE_URL.replace("\"", "");
+		IMAGE_ARCHIVE_WADO_RS_URL 					= IMAGE_ARCHIVE_WADO_RS_URL.replace("\"", "");
+		PID_LOOKUP_DB_URL 							= PID_LOOKUP_DB_URL.replace("\"", "");
+		DIAGNOSTIC_REPORT_DB_URL 					= DIAGNOSTIC_REPORT_DB_URL.replace("\"", "");
+		DIAGNOSTIC_REPORT_PERFORMER_REFERENCE  = DIAGNOSTIC_REPORT_PERFORMER_REFERENCE.replace("\"", "");
+		DIAGNOSTIC_REPORT_CODE_STRING 			= DIAGNOSTIC_REPORT_CODE_STRING.replace("\"", "");
+
+
 	}
 
 	public static String getQidoURL() {
