@@ -27,23 +27,21 @@ public class DiagnosticReportInterceptor extends InterceptorAdapter {
 	private static PreparedStatement queryPidDate = null;
 
 	private void connectToEdge() {
-		if(conn != null) {
-			try {
-				System.out.println("\n\n### Connecting to EdgeServer #####");
-				Class.forName("org.postgresql.Driver");
-				conn = DriverManager.getConnection(Utl.getDiagnosticReportDbURL(), "edge", "psword");
-				queryPidOnly = conn.prepareStatement("SELECT * FROM v_exam_status WHERE mrn = ?");
-				queryPidDate = conn.prepareStatement("SELECT * FROM v_exam_status WHERE mrn = ? AND status_timestamp >= ?");
-				System.out.println("queryPidOnly: " + queryPidOnly);
-				System.out.println("queryPidDate: " + queryPidDate);
-				System.out.println("### Success #####\n");
-			} catch (Throwable e) {
-				System.out.println("\n\n## Failed ##\n\n");
-				System.out.println(Utl.getDiagnosticReportDbURL());
-				System.out.println(e.getMessage());
-				e.printStackTrace();
-				System.out.println("\n\n####\n\n");
-			}
+		try {
+			System.out.println("\n\n### Connecting to EdgeServer #####");
+			Class.forName("org.postgresql.Driver");
+			conn = DriverManager.getConnection(Utl.getDiagnosticReportDbURL(), "edge", "psword");
+			queryPidOnly = conn.prepareStatement("SELECT * FROM v_exam_status WHERE mrn = ?");
+			queryPidDate = conn.prepareStatement("SELECT * FROM v_exam_status WHERE mrn = ? AND status_timestamp >= ?");
+			System.out.println("queryPidOnly: " + queryPidOnly);
+			System.out.println("queryPidDate: " + queryPidDate);
+			System.out.println("### Success #####\n");
+		} catch (Throwable e) {
+			System.out.println("\n\n## Failed ##\n\n");
+			System.out.println(Utl.getDiagnosticReportDbURL());
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+			System.out.println("\n\n####\n\n");
 		}
 	}
 
@@ -105,6 +103,7 @@ public class DiagnosticReportInterceptor extends InterceptorAdapter {
 				try {
 					if (result != null) result.close();
 				} catch (SQLException se) {
+					System.out.println("#####\n" + se.getMessage());
 					se.printStackTrace();
 				}
 			}
@@ -206,7 +205,8 @@ public class DiagnosticReportInterceptor extends InterceptorAdapter {
 				theResponse.getWriter().write(body);
 			} catch (IOException ioe) {
 				ioe.printStackTrace();
-				String em = "Error writing httpresponse body " + ioe.getMessage();
+				String em = "Error writing httpresponse body: " + ioe.getMessage();
+				System.out.println("#####\n" + em);
 				throw new InternalErrorException(em, ioe);
 			}
 
@@ -215,6 +215,7 @@ public class DiagnosticReportInterceptor extends InterceptorAdapter {
 		} catch (Exception e) {
 			e.printStackTrace();
 			String em = "Error processing diagnostic report request " + e.getMessage();
+			System.out.println("#####\n" + em);
 			throw new InternalErrorException(em, e);
 		}
 	} // EO incomingRequestPostProcessed method
