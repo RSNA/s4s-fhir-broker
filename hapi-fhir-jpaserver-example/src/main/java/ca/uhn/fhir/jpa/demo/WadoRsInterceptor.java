@@ -1,31 +1,20 @@
 package ca.uhn.fhir.jpa.demo;
 
-import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.parser.DataFormatException;
-import ca.uhn.fhir.parser.IParser;
-import ca.uhn.fhir.rest.method.RequestDetails;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
 import ca.uhn.fhir.rest.server.interceptor.InterceptorAdapter;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import jdk.nashorn.internal.runtime.GlobalConstants;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.dstu3.model.Bundle;
-import org.hl7.fhir.dstu3.model.Patient;
-import org.hl7.fhir.dstu3.model.Resource;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
 
 public class WadoRsInterceptor extends InterceptorAdapter {
 
@@ -125,20 +114,33 @@ public class WadoRsInterceptor extends InterceptorAdapter {
 				if (read <= 0) break;
 				conn.getOutputStream().write(buffer, 0, read);
 			}
-
-			resp.setStatus(conn.getResponseCode());
-			for (int i = 0; ; ++i) {
-				final String header = conn.getHeaderFieldKey(i);
-				if (header == null) break;
-				final String value = conn.getHeaderField(i);
-				resp.setHeader(header, value);
+			try {
+				if(conn.getResponseCode() == 503) {
+					System.out.println("Waiting for connection.");
+					Thread.sleep(1000);
+				} else {
+					System.out.println("Response status: " + Integer.toString(conn.getResponseCode()));
+				}
+			} catch (Throwable e) {
+				System.out.println("Response status: " + Integer.toString(conn.getResponseCode()));
 			}
+			if(conn.getResponseCode() == 503){
+				System.out.println("\n\n #### Waiting for image transfer. Re-run to complete. ####\n\n");
+			} else {
+				resp.setStatus(conn.getResponseCode());
+				for (int i = 0; ; ++i) {
+					final String header = conn.getHeaderFieldKey(i);
+					if (header == null) break;
+					final String value = conn.getHeaderField(i);
+					resp.setHeader(header, value);
+				}
 
-			InputStream is = conn.getInputStream();
-			OutputStream os = resp.getOutputStream();
-			IOUtils.copy(is, os);
-			is.close();
-			os.close();
+				InputStream is = conn.getInputStream();
+				OutputStream os = resp.getOutputStream();
+				IOUtils.copy(is, os);
+				is.close();
+				os.close();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			// pass

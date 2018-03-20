@@ -28,20 +28,16 @@ public class DiagnosticReportInterceptor extends InterceptorAdapter {
 
 	private void connectToEdge() {
 		try {
-			System.out.println("\n\n### Connecting to EdgeServer #####");
 			Class.forName("org.postgresql.Driver");
 			conn = DriverManager.getConnection(Utl.getDiagnosticReportDbURL(), "edge", "psword");
 			queryPidOnly = conn.prepareStatement("SELECT * FROM v_exam_status WHERE mrn = ?");
 			queryPidDate = conn.prepareStatement("SELECT * FROM v_exam_status WHERE mrn = ? AND status_timestamp >= ?");
-			System.out.println("queryPidOnly: " + queryPidOnly);
-			System.out.println("queryPidDate: " + queryPidDate);
-			System.out.println("### Success #####\n");
 		} catch (Throwable e) {
-			System.out.println("\n\n## Failed ##\n\n");
+			System.out.println("## Failed Connecting to EdgeServer at " + Utl.getDiagnosticReportDbURL() + "##\n\n");
 			System.out.println(Utl.getDiagnosticReportDbURL());
 			System.out.println(e.getMessage());
 			e.printStackTrace();
-			System.out.println("\n\n####\n\n");
+			System.out.println("####\n\n");
 		}
 	}
 
