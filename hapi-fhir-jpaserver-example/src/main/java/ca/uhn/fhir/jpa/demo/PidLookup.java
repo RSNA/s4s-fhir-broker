@@ -18,17 +18,24 @@ public class PidLookup {
 
 		try {
 			conn = DriverManager.getConnection(Utl.getPidLookupDbURL());
-			Statement stmt = conn.createStatement();
-			stmt.executeUpdate(create);
-			stmt.close();
+		} catch (Throwable e) {
+			System.out.println("#######\nFailed to get connection to: " + Utl.getPidLookupDbURL() + " in PidLookup");
+			System.out.println(e.getMessage());
+		}
 
+		try (Statement stmt = conn.createStatement()) {
+			stmt.executeUpdate(create);
+		} catch (Throwable e) {
+		}
+
+		try {
 			insert = conn.prepareStatement("INSERT INTO pid_lookup VALUES (?, ?)");
 			update = conn.prepareStatement("UPDATE pid_lookup SET pid_out = ? WHERE pid_in = ?");
 			query = conn.prepareStatement("SELECT * FROM pid_lookup WHERE pid_in = ?");
 		} catch (Throwable e) {
-			System.out.println("#######\nFailed to get connection to: " + Utl.getPidLookupDbURL() + " in PidLookup");
+			System.out.println("#######\nPrepared statement creation error in PidLookup");
 			System.out.println(e.getMessage());
-			e.printStackTrace();		}
+		}
 	}
 
 	public static void put(String pidIn, String pidOut) {

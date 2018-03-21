@@ -172,12 +172,11 @@ public class DiagnosticReportInterceptor extends InterceptorAdapter {
 
 				// report_text => presentedForm
 				String txt = result.getString("report_text");
-				byte[] bytes = Base64.getEncoder().encode(txt.getBytes("UTF-8"));
 
 				Attachment att = new Attachment();
 				att.setContentType("application/text");
 				att.setLanguage("en-US");
-				att.setData(bytes);
+				att.setData(txt.getBytes("UTF-8"));
 				att.setTitle(result.getString("exam_description"));
 				List<Attachment> atts = new ArrayList<>();
 				atts.add(att);
