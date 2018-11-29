@@ -114,33 +114,19 @@ public class WadoRsInterceptor extends InterceptorAdapter {
 				if (read <= 0) break;
 				conn.getOutputStream().write(buffer, 0, read);
 			}
-			try {
-				if(conn.getResponseCode() == 503) {
-					System.out.println("Waiting for connection.");
-					Thread.sleep(1000);
-				} else {
-					System.out.println("Response status: " + Integer.toString(conn.getResponseCode()));
-				}
-			} catch (Throwable e) {
-				System.out.println("Response status: " + Integer.toString(conn.getResponseCode()));
+			resp.setStatus(conn.getResponseCode());
+			for (int i = 0; ; ++i) {
+				final String header = conn.getHeaderFieldKey(i);
+				final String value = conn.getHeaderField(i);
+				if (header == null && value == null) break;
+				if (header != null) resp.setHeader(header, value);
 			}
-			if(conn.getResponseCode() == 503){
-				System.out.println("\n\n #### Waiting for image transfer. Re-run to complete. ####\n\n");
-			} else {
-				resp.setStatus(conn.getResponseCode());
-				for (int i = 0; ; ++i) {
-					final String header = conn.getHeaderFieldKey(i);
-					final String value = conn.getHeaderField(i);
-					if (header == null && value == null) break;
-					if (header != null) resp.setHeader(header, value);
-				}
 
-				InputStream is = conn.getInputStream();
-				OutputStream os = resp.getOutputStream();
-				IOUtils.copy(is, os);
-				is.close();
-				os.close();
-			}
+			InputStream is = conn.getInputStream();
+			OutputStream os = resp.getOutputStream();
+			IOUtils.copy(is, os);
+			is.close();
+			os.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 			// pass
