@@ -130,9 +130,9 @@ public class WadoRsInterceptor extends InterceptorAdapter {
 				resp.setStatus(conn.getResponseCode());
 				for (int i = 0; ; ++i) {
 					final String header = conn.getHeaderFieldKey(i);
-					if (header == null) break;
 					final String value = conn.getHeaderField(i);
-					resp.setHeader(header, value);
+					if (header == null && value == null) break;
+					if (header != null) resp.setHeader(header, value);
 				}
 
 				InputStream is = conn.getInputStream();
