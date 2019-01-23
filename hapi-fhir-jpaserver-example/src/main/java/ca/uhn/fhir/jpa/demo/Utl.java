@@ -236,10 +236,19 @@ public class Utl implements Cmn {
 				String dcmKey = member.getKey();
 				List<String> dcmValues = new ArrayList<String>();
 				try {
-					JsonArray dcmJsonValues = member.getValue().getAsJsonObject().get("Value").getAsJsonArray();
+					JsonObject dcmJsonObj = member.getValue().getAsJsonObject();
+					boolean isPN = dcmJsonObj.get("vr").getAsString().equals("PN");
+					JsonArray dcmJsonValues = dcmJsonObj.get("Value").getAsJsonArray();
 					for (int k = 0; k < dcmJsonValues.size(); k++) {
-						String dcmv = dcmJsonValues.get(k).toString();
-						dcmv = dcmv.replaceAll("^\"|\"$", "");
+						String dcmv;
+						if (isPN) {
+							JsonObject pnObj = dcmJsonValues.get(k).getAsJsonObject();
+							JsonElement alphabetic = pnObj.get("Alphabetic");
+							dcmv = (alphabetic == null) ? "" : alphabetic.getAsString();
+						} else {
+							dcmv = dcmJsonValues.get(k).toString();
+							dcmv = dcmv.replaceAll("^\"|\"$", "");
+						}
 						dcmValues.add(dcmv);
 					}
 				} catch (NullPointerException e) {
